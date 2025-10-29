@@ -49,6 +49,10 @@ function App() {
     // 保持 png 顺序稳定（按路径字典序）
     Object.keys(folderToPngsLocal).forEach((k) => folderToPngsLocal[k].sort())
 
+    // 调试：输出所有可用的文件夹名称
+    console.log('可用的全景图文件夹:', Object.keys(folderToPanoLocal))
+    console.log('可用的 PNG 文件夹:', Object.keys(folderToPngsLocal))
+
     return { folderToPano: folderToPanoLocal, folderToPngs: folderToPngsLocal }
   }, [])
 
@@ -77,21 +81,31 @@ function App() {
     ]
   }, [currentFolder, folderToPngs])
 
-  const handlePointClick = () => {
-    setIsTransitioning(true);
-
-    // 延迟更长时间以展示相机拉近动画
-    setTimeout(() => {
-      // 点击热力点时加载"大门前场"的全景图
-      const frontGateFolder = "大门前场";
-      const frontGatePano = folderToPano[frontGateFolder];
-      if (frontGatePano) {
-        setCurrentPanoUrl(frontGatePano);
-        setCurrentFolder(frontGateFolder);
-      }
-      setViewMode("panorama");
-      setIsTransitioning(false);
-    }, 1500);
+  const handlePointClick = (label:string) => {
+    const folderName = label;
+    const panoUrl = folderToPano[folderName];
+    const pngs = folderToPngs[folderName];
+    
+    console.log('点击热力点:', { folderName, panoUrl, hasPngs: pngs?.length, availableFolders: Object.keys(folderToPano) });
+    
+    if (panoUrl) {
+      // 如果有全景图，执行过渡动画并切换到全景模式
+      setIsTransitioning(true);
+      setTimeout(() => {
+        setCurrentPanoUrl(panoUrl);
+        setCurrentFolder(folderName);
+        setViewMode("panorama");
+        setIsTransitioning(false);
+      }, 1500);
+    } else if (pngs?.length) {
+      // 如果只有 PNG 图片，弹出弹窗展示
+      setLightboxImages(pngs);
+      setLightboxTitle(folderName);
+      setCurrentFolder(folderName);
+    } else {
+      // 无资源则不处理
+      console.warn(`文件夹 "${folderName}" 没有找到全景图或 PNG 图片`);
+    }
   };
 
   const handleBackToMap = () => {
@@ -176,14 +190,14 @@ function App() {
               }
             }}
           />
-          {lightboxImages && (
-            <ImageLightbox
-              images={lightboxImages}
-              title={lightboxTitle}
-              onClose={() => { setLightboxImages(null); setLightboxTitle(undefined) }}
-            />
-          )}
         </>
+      )}
+      {lightboxImages && (
+        <ImageLightbox
+          images={lightboxImages}
+          title={lightboxTitle}
+          onClose={() => { setLightboxImages(null); setLightboxTitle(undefined) }}
+        />
       )}
     </div>
   );
