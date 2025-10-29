@@ -1,7 +1,8 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useFrame, useThree, useLoader } from "@react-three/fiber";
 import { TextureLoader } from "three";
 import * as THREE from "three";
+import { Text } from "@react-three/drei";
 
 interface HotspotProps {
   position?: [number, number, number] | THREE.Vector3;
@@ -14,6 +15,7 @@ interface HotspotProps {
   hoverColor?: string; // 悬停颜色
   disabled?: boolean; // 是否禁用交互
   imageUrl?: string; // 图片URL，用于在圆环内部显示
+  label?: string; // 文字标识
 }
 
 export default function Hotspot({
@@ -27,8 +29,11 @@ export default function Hotspot({
   hoverColor = "#64B5F6", // 浅蓝色，与白色搭配
   disabled = false,
   imageUrl,
+  label,
 }: HotspotProps) {
   const groupRef = useRef<THREE.Group>(null);
+  const borderMeshRef = useRef<THREE.Mesh>(null);
+  const imageMeshRef = useRef<THREE.Mesh>(null);
   const [hovered, setHovered] = useState(false);
   const { camera } = useThree();
 
@@ -38,6 +43,14 @@ export default function Hotspot({
     imageUrl ||
       "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
   );
+
+  // 设置纹理属性，确保图片正确显示
+  useEffect(() => {
+    if (texture && imageUrl) {
+      texture.flipY = false;
+      texture.needsUpdate = true;
+    }
+  }, [texture, imageUrl]);
 
   useFrame((_, delta) => {
     // 只有当 followCamera 为 true 且没有传入 position 时才跟随相机
@@ -65,9 +78,22 @@ export default function Hotspot({
       groupRef.current.position.lerp(target, delta * 6);
     }
 
-    // 让圆环和图片始终面向相机
+    // 保持固定方向，不跟随相机旋转
     if (groupRef.current) {
-      groupRef.current.lookAt(camera.position);
+      groupRef.current.rotation.set(0, 0, 0);
+
+      // 悬浮时放大效果
+      const targetScale = hovered ? 1.2 : 1.0;
+      const currentScale = groupRef.current.scale.x;
+      const newScale = currentScale + (targetScale - currentScale) * delta * 8;
+      groupRef.current.scale.set(newScale, newScale, newScale);
+    }
+
+    // 让图片和边框始终面向相机（billboard效果）
+    if (borderMeshRef.current && imageMeshRef.current && imageUrl) {
+      // 让边框和图片都面向相机
+      borderMeshRef.current.lookAt(camera.position);
+      imageMeshRef.current.lookAt(camera.position);
     }
   });
 
@@ -107,29 +133,45 @@ export default function Hotspot({
       onPointerOver={handlePointerOver}
       onPointerOut={handlePointerOut}
     >
-      {/* 圆环 */}
-      <mesh>
-        <torusGeometry args={[size, size * 0.1, 16, 32]} />
-        <meshStandardMaterial
-          color={hovered ? hoverColor : defaultColor}
-          emissive={hovered ? hoverColor : defaultColor}
-          emissiveIntensity={hovered ? 0.8 : 0.6}
-          transparent={true}
-          opacity={0.9}
-        />
-      </mesh>
+      {/* 图片带白色边框 */}
+      {imageUrl && texture && (
+        <>
+          {/* 白色边框 - 外圈 */}
+          <mesh ref={borderMeshRef} position={[0, -0.1, 0]}>
+            <circleGeometry args={[size, 32]} />
+            <meshStandardMaterial
+              color="#ffffff"
+              transparent={false}
+              side={THREE.DoubleSide}
+            />
+          </mesh>
+          {/* 图片 - 内圈，缩小以增加边框宽度 */}
+          <mesh ref={imageMeshRef} position={[0, 0, 0.001]}>
+            <circleGeometry args={[size * 0.82, 32]} />
+            <meshStandardMaterial
+              map={texture}
+              transparent={false}
+              opacity={1}
+              side={THREE.DoubleSide}
+            />
+          </mesh>
+        </>
+      )}
 
-      {/* 内部图片 - 使用圆形mesh显示图片纹理 */}
-      {imageUrl && (
-        <mesh position={[0, 0, 0.01]}>
-          <circleGeometry args={[size * 0.8, 32]} />
-          <meshStandardMaterial
-            map={texture}
-            transparent={true}
-            opacity={0.95}
-            side={THREE.DoubleSide}
-          />
-        </mesh>
+      {/* 文字标识 */}
+      {label && (
+        <Text
+          position={[0, size * 1.5, 0.01]}
+          fontSize={size * 0.3}
+          color={hovered ? hoverColor : defaultColor}
+          anchorX="center"
+          anchorY="middle"
+          outlineWidth={size * 0.02}
+          outlineColor="#000000"
+          outlineOpacity={0.5}
+        >
+          {label}
+        </Text>
       )}
     </group>
   );
