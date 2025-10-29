@@ -79,7 +79,8 @@ export default function TopDownControls({
       if (!enableZoom) return;
 
       event.preventDefault();
-      const zoomSpeed = 0.1;
+      // 减小缩放速度，使缩放更平滑
+      const zoomSpeed = 0.02; // 从 0.1 减小到 0.02
       const deltaY = event.deltaY;
 
       // 缩放视场角来模拟缩放
