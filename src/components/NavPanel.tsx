@@ -1,62 +1,79 @@
-import navImgUrl from '../assets/nav.png?url'
+// 使用 Vite public 目录的绝对路径
+const navImgUrl = "/assets/nav.png";
 
 interface Hotspot {
-  id: string
-  title: string
-  imageUrl: string
-  leftPct: number
-  topPct: number
+  id: string;
+  title: string;
+  imageUrl: string;
+  leftPct: number;
+  topPct: number;
 }
 
 interface NavPanelProps {
-  hotspots: Hotspot[]
-  currentId?: string
-  onSelect: (id: string) => void
+  hotspots: Hotspot[];
+  currentId?: string;
+  onSelect: (id: string) => void;
 }
 
-export default function NavPanel({ hotspots, currentId, onSelect }: NavPanelProps) {
+export default function NavPanel({
+  hotspots,
+  currentId,
+  onSelect,
+}: NavPanelProps) {
   return (
     <div
       style={{
-        position: 'absolute',
+        position: "absolute",
         top: 20,
         right: 20,
         bottom: 20,
         width: 320,
         zIndex: 200,
         borderRadius: 16,
-        overflow: 'hidden',
-        background: 'rgba(20,20,20,0.5)',
-        border: '1px solid rgba(255,255,255,0.12)',
-        boxShadow: '0 8px 30px rgba(0,0,0,0.35)',
-        backdropFilter: 'blur(12px) saturate(120%)',
-        WebkitBackdropFilter: 'blur(12px) saturate(120%)'
+        overflow: "hidden",
+        background: "rgba(20,20,20,0.5)",
+        border: "1px solid rgba(255,255,255,0.12)",
+        boxShadow: "0 8px 30px rgba(0,0,0,0.35)",
+        backdropFilter: "blur(12px) saturate(120%)",
+        WebkitBackdropFilter: "blur(12px) saturate(120%)",
       }}
     >
-      <div style={{ padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 8 }}>
+      <div
+        style={{
+          padding: "12px 14px",
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+        }}
+      >
         <div
           style={{
             width: 10,
             height: 10,
             borderRadius: 999,
-            background: '#6ee7b7',
-            boxShadow: '0 0 8px #6ee7b7'
+            background: "#6ee7b7",
+            boxShadow: "0 0 8px #6ee7b7",
           }}
         />
-        <div style={{ color: '#fff', fontSize: 14, opacity: 0.9 }}>导航</div>
+        <div style={{ color: "#fff", fontSize: 14, opacity: 0.9 }}>导航</div>
       </div>
-      <div style={{ position: 'relative', flex: 1 }}>
+      <div style={{ position: "relative", flex: 1 }}>
         <img
           src={navImgUrl}
           alt="nav"
-          style={{ width: '100%', height: 'auto', display: 'block', userSelect: 'none' }}
+          style={{
+            width: "100%",
+            height: "auto",
+            display: "block",
+            userSelect: "none",
+          }}
         />
-        <div style={{ position: 'absolute', inset: 0 }}>
+        <div style={{ position: "absolute", inset: 0 }}>
           {hotspots.map((hs) => (
             <div
               key={hs.id}
               style={{
-                position: 'absolute',
+                position: "absolute",
                 left: `${hs.leftPct}%`,
                 top: `${hs.topPct}%`,
                 transform: 'translate(-50%, -50%)',
@@ -108,7 +125,5 @@ export default function NavPanel({ hotspots, currentId, onSelect }: NavPanelProp
         </div>
       </div>
     </div>
-  )
+  );
 }
-
-
