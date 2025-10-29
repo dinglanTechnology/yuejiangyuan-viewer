@@ -88,7 +88,7 @@ function App() {
     <div style={{ width: "100vw", height: "100vh", background: "black" }}>
       <WelcomeScreen />
       {viewMode === "map" ? (
-        <Canvas camera={{ fov: 50, position: [0, 50, 0] }}>
+        <Canvas camera={{ fov: 2, position: [-4, 86, -2.5] }}>
           <CameraLock />
           <MapModel
             onPointClick={handlePointClick}

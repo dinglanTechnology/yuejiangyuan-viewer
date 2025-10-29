@@ -14,6 +14,10 @@ export default function WelcomeScreen() {
     setIsLoaded(true);
   };
 
+  const handleGoToMap = () => {
+    setIsVisible(false);
+  };
+
   return (
     <div
       style={{
@@ -54,6 +58,46 @@ export default function WelcomeScreen() {
           }}
           onLoad={handleImageLoad}
         />
+        
+        {/* GO TO MAP 按钮 */}
+        {isLoaded && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation(); // 阻止事件冒泡到父级div
+              handleGoToMap();
+            }}
+            style={{
+              position: "absolute",
+              bottom: "25%",
+              left: "50%",
+              transform: "translateX(-50%)",
+              padding: "12px 32px",
+              backgroundColor: "#7CB342",
+              color: "white",
+              border: "none",
+              borderRadius: "4px",
+              fontSize: "16px",
+              fontWeight: "600",
+              letterSpacing: "1px",
+              cursor: "pointer",
+              transition: "all 0.3s ease",
+              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)",
+              zIndex: 10000,
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = "#689F38";
+              e.currentTarget.style.transform = "translateX(-50%) translateY(-2px)";
+              e.currentTarget.style.boxShadow = "0 6px 16px rgba(0, 0, 0, 0.4)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = "#7CB342";
+              e.currentTarget.style.transform = "translateX(-50%) translateY(0)";
+              e.currentTarget.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.3)";
+            }}
+          >
+            GO TO MAP
+          </button>
+        )}
       </div>
     </div>
   );
