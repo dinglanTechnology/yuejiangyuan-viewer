@@ -89,7 +89,8 @@ export default function NavPanel({
                 style={{
                   width: 16,
                   height: 16,
-                  borderRadius: 999,
+                  borderRadius: 8,
+                  padding: 0,
                   border: currentId === hs.id ? '2px solid rgba(255,255,255,0.95)' : '2px solid rgba(255,255,255,0.7)',
                   background: currentId === hs.id ? 'rgba(110,231,183,0.95)' : 'rgba(110,231,183,0.8)',
                   boxShadow: '0 0 10px rgba(110,231,183,0.95), 0 0 24px rgba(110,231,183,0.5)',

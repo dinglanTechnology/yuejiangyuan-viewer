@@ -57,10 +57,10 @@ function App() {
   const [currentFolder, setCurrentFolder] = useState<string | null>(null)
 
   const hotspots = [
-    { id: 'hl-1', title: '廊桥', imageUrl: demo1, leftPct: 22, topPct: 28 },
+    // { id: 'hl-1', title: '廊桥', imageUrl: demo1, leftPct: 22, topPct: 28 },
     { id: 'hl-2', title: '楼栋渲染', imageUrl: demo3, leftPct: 58, topPct: 34 },
     { id: 'hl-3', title: '户型图', imageUrl: demo2, leftPct: 72, topPct: 48 },
-    { id: 'hl-4', title: '叠水', imageUrl: demo1, leftPct: 40, topPct: 62 },
+    // { id: 'hl-4', title: '叠水', imageUrl: demo1, leftPct: 40, topPct: 62 },
     { id: 'hl-5', title: '单元入户门', imageUrl: demo2, leftPct: 66, topPct: 70 },
     { id: 'hl-6', title: '阳台', imageUrl: demo3, leftPct: 30, topPct: 78 }
   ]
