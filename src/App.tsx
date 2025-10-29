@@ -8,6 +8,7 @@ import CameraLock from "./components/CameraLock";
 import NavPanel from "./components/NavPanel";
 import ImageLightbox from "./components/ImageLightbox";
 import WelcomeScreen from "./components/WelcomeScreen";
+// import ClickablePointMarkers from "./components/ClickablePointMarkers";
 
 // 修正公共资源路径：使用 Vite public 目录下的绝对路径
 const panoAUrl = "/assets/yuejiangyuan.jpg";
@@ -90,11 +91,19 @@ function App() {
       {viewMode === "map" ? (
         <Canvas camera={{ fov: 2, position: [-4, 86, -2.5] }}>
           <CameraLock />
+          {/* <ClickablePointMarkers /> */}
           <MapModel
             onPointClick={handlePointClick}
             isTransitioning={isTransitioning}
           />
-          {!isTransitioning && <TopDownControls enableZoom={true} />}
+          {!isTransitioning && (
+            <TopDownControls
+              enableZoom={true}
+              maxDistance={15}
+              minFov={1}
+              maxFov={8}
+            />
+          )}
         </Canvas>
       ) : (
         <>
