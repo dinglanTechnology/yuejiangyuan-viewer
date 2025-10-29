@@ -5,6 +5,7 @@ import { Mesh } from "three";
 import * as THREE from "three";
 import CloudManager from "./CloudManager";
 import Hotspot from "./Hotspot";
+import gateImg from "/assets/gate.jpg";
 
 interface MapModelProps {
   onPointClick: () => void;
@@ -60,15 +61,16 @@ export default function MapModel({
         onClick={handleHotspotClick}
         disabled={isTransitioning}
         size={0.1}
-        defaultColor="#4ecdc4"
-        hoverColor="#ff6b6b"
+        defaultColor="#ffffff"
+        hoverColor="#64B5F6"
         position={
           new THREE.Vector3(
             -4.692880421128081,
-            -3.56334382171481,
+            -2.56334382171481,
             -2.0632845034885405
           )
         }
+        imageUrl={gateImg}
       />
 
       {/* 环境光 */}
