@@ -11,14 +11,14 @@ import balconyImg from "/assets/balcony.jpg";
 import buildingRenderImg from "/assets/unit.jpg";
 
 interface MapModelProps {
-  onPointClick: () => void;
+  onPointClick: (label:string) => void;
   isTransitioning: boolean;
 }
 
 const hotPoints = [
   {
     name: "gate",
-    label: "大门",
+    label: "大门前场",
     position: new THREE.Vector3(
       -4.692880421128081,
       -2.56334382171481,
@@ -48,7 +48,7 @@ const hotPoints = [
   },
   {
     name: "buildingRender",
-    label: "楼栋渲染图",
+    label: "楼栋渲染",
     position: new THREE.Vector3(
       -3.7654038675276844,
       -3.634304843029845, // 增加1单位，靠近镜头
@@ -77,11 +77,11 @@ export default function MapModel({
     }
   });
 
-  const handleHotspotClick = () => {
+  const handleHotspotClick = (label:string) => {
     console.log("热点被点击了！isTransitioning:", isTransitioning);
     if (!isTransitioning) {
       console.log("调用 onPointClick");
-      onPointClick();
+      onPointClick(label);
     } else {
       console.log("正在过渡中，忽略点击");
     }
@@ -106,7 +106,7 @@ export default function MapModel({
         <Hotspot
           key={hotPoint.name}
           followCamera={true}
-          onClick={handleHotspotClick}
+          onClick={() => handleHotspotClick(hotPoint.label)}
           disabled={isTransitioning}
           size={0.1}
           defaultColor="#ffffff"
