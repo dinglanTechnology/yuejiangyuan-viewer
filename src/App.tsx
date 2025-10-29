@@ -12,7 +12,6 @@ import WelcomeScreen from "./components/WelcomeScreen";
 
 // 修正公共资源路径：使用 Vite public 目录下的绝对路径
 const panoAUrl = "/assets/yuejiangyuan.jpg";
-const demo1 = "/assets/demo1.jpg";
 const demo2 = "/assets/demo2.jpg";
 const demo3 = "/assets/demo3.jpg";
 
@@ -66,16 +65,30 @@ function App() {
   ]
 
   // 全景内图片热点（方位以弧度计，yaw=0 指向画面正前方，pitch=0 水平）
-  // 仅展示一个圆形热点
-  const panoImageHotspots = [
-    { id: 'pano-photo-1', title: '查看图片', imageUrl: demo1, yaw: 0, pitch: 0 },
-  ]
+  // 从当前文件夹的 PNG 图片中随机选择一张作为热点图片
+  const panoImageHotspots = useMemo(() => {
+    if (!currentFolder || !folderToPngs[currentFolder]?.length) {
+      return []
+    }
+    const images = folderToPngs[currentFolder]
+    const randomImage = images[Math.floor(Math.random() * images.length)]
+    return [
+      { id: 'pano-photo-1', title: '查看图片', imageUrl: randomImage, yaw: 0, pitch: 0 },
+    ]
+  }, [currentFolder, folderToPngs])
 
   const handlePointClick = () => {
     setIsTransitioning(true);
 
     // 延迟更长时间以展示相机拉近动画
     setTimeout(() => {
+      // 点击热力点时加载"大门前场"的全景图
+      const frontGateFolder = "大门前场";
+      const frontGatePano = folderToPano[frontGateFolder];
+      if (frontGatePano) {
+        setCurrentPanoUrl(frontGatePano);
+        setCurrentFolder(frontGateFolder);
+      }
       setViewMode("panorama");
       setIsTransitioning(false);
     }, 1500);
