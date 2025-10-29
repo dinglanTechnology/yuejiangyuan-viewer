@@ -34,6 +34,7 @@ export default function Hotspot({
   const groupRef = useRef<THREE.Group>(null);
   const borderMeshRef = useRef<THREE.Mesh>(null);
   const imageMeshRef = useRef<THREE.Mesh>(null);
+  const textRef = useRef<THREE.Mesh>(null);
   const [hovered, setHovered] = useState(false);
   const { camera } = useThree();
 
@@ -94,6 +95,43 @@ export default function Hotspot({
       // 让边框和图片都面向相机
       borderMeshRef.current.lookAt(camera.position);
       imageMeshRef.current.lookAt(camera.position);
+    }
+
+    // 让文字也面向相机，并动态调整位置使其在图片上方（相对于相机视角）
+    if (textRef.current && imageMeshRef.current && imageUrl) {
+      // 让文字面向相机
+      textRef.current.lookAt(camera.position);
+
+      // 获取图片的世界位置
+      const imageWorldPos = new THREE.Vector3();
+      imageMeshRef.current.getWorldPosition(imageWorldPos);
+
+      // 计算从图片到相机的方向
+      const toCamera = new THREE.Vector3()
+        .subVectors(camera.position, imageWorldPos)
+        .normalize();
+
+      // 计算图片平面的"上方"方向（相对于相机视角）
+      const worldUp = new THREE.Vector3(0, 1, 0);
+      const right = new THREE.Vector3()
+        .crossVectors(worldUp, toCamera)
+        .normalize();
+      const localUp = new THREE.Vector3()
+        .crossVectors(toCamera, right)
+        .normalize();
+
+      // 计算文字在世界空间中的位置（图片上方）
+      const textOffset = localUp.clone().multiplyScalar(size * 1.2);
+      const textWorldPos = imageWorldPos.clone().add(textOffset);
+
+      // 将世界坐标转换回 group 的本地坐标
+      if (groupRef.current) {
+        const localPos = groupRef.current.worldToLocal(textWorldPos.clone());
+        textRef.current.position.copy(localPos);
+      }
+    } else if (textRef.current) {
+      // 如果没有图片，使用简单的位置计算
+      textRef.current.lookAt(camera.position);
     }
   });
 
@@ -158,17 +196,18 @@ export default function Hotspot({
         </>
       )}
 
-      {/* 文字标识 */}
+      {/* 文字标识 - 位置动态计算，固定在图片上方（相对于相机视角） */}
       {label && (
         <Text
-          position={[0, size * 1.5, 0.01]}
+          ref={textRef}
+          position={[0, size * 1.2, 0]}
           fontSize={size * 0.3}
           color={hovered ? hoverColor : defaultColor}
           anchorX="center"
           anchorY="middle"
-          outlineWidth={size * 0.02}
+          outlineWidth={size * 0.1}
           outlineColor="#000000"
-          outlineOpacity={0.5}
+          outlineOpacity={0.8}
         >
           {label}
         </Text>
