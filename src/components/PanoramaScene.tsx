@@ -1,10 +1,10 @@
 import { useLoader } from '@react-three/fiber'
 import * as THREE from 'three'
 import { RGBELoader } from 'three/addons/loaders/RGBELoader.js'
-// import hdrImg from '../assets/yuejiangyuan.hdr'
+import hdrImg from '../assets/yuejiangyuan.hdr?url'
 
 export default function PanoramaScene() {
-  const texture = useLoader(RGBELoader, '../assets/yuejiangyuan.hdr')
+  const texture = useLoader(RGBELoader, hdrImg)
   texture.mapping = THREE.EquirectangularReflectionMapping
 
   return (
