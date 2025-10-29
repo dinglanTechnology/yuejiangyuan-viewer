@@ -33,6 +33,7 @@ export default function WelcomeScreen() {
         zIndex: 9999,
         opacity: isVisible ? 1 : 0,
         transition: "opacity 1s ease-in-out",
+        pointerEvents: isVisible ? "auto" : "none", // 当不可见时，不阻止事件传递
       }}
       onClick={handleClick}
     >
@@ -58,7 +59,7 @@ export default function WelcomeScreen() {
           }}
           onLoad={handleImageLoad}
         />
-        
+
         {/* GO TO MAP 按钮 */}
         {isLoaded && (
           <button
@@ -86,12 +87,14 @@ export default function WelcomeScreen() {
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.backgroundColor = "#689F38";
-              e.currentTarget.style.transform = "translateX(-50%) translateY(-2px)";
+              e.currentTarget.style.transform =
+                "translateX(-50%) translateY(-2px)";
               e.currentTarget.style.boxShadow = "0 6px 16px rgba(0, 0, 0, 0.4)";
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.backgroundColor = "#7CB342";
-              e.currentTarget.style.transform = "translateX(-50%) translateY(0)";
+              e.currentTarget.style.transform =
+                "translateX(-50%) translateY(0)";
               e.currentTarget.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.3)";
             }}
           >
