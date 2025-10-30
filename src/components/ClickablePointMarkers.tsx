@@ -23,8 +23,6 @@ export default function ClickablePointMarkers() {
 
       if (intersects.length > 0) {
         const point = intersects[0].point.clone();
-        console.log("命中模型的空间坐标:", point);
-
         // 保存点击点
         setPoints((prev) => [...prev, point]);
       }
