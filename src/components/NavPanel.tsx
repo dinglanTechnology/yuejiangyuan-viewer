@@ -16,7 +16,7 @@ interface NavPanelProps {
 	images?: string[]; // 当前场景图集
 	videos?: string[]; // 当前场景视频集
 	sampleTitle?: string; // 样板间标题
-	onOpenLightbox?: (images: string[], title?: string) => void; // 打开外部图片预览
+	onOpenLightbox?: (images: string[], title?: string, startIndex?: number) => void; // 打开外部图片预览
 }
 
 import { useState } from "react";
@@ -244,10 +244,10 @@ export default function NavPanel({
 								<div style={{ color: '#F0F7FF', fontSize: 16, fontWeight: 700, letterSpacing: 0.5 }}>图集</div>
 							</div>
 							<div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
-								{images!.map((url, idx) => (
+							{images!.map((url, idx) => (
 									<button
 										key={idx}
-										onClick={() => onOpenLightbox?.(images!, sampleTitle)}
+									onClick={() => onOpenLightbox?.(images!, sampleTitle, idx)}
 										title="查看图片"
 										style={{
 											border: '1px solid rgba(255,255,255,0.2)',

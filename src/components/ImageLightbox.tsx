@@ -3,12 +3,13 @@ interface ImageLightboxProps {
   images?: string[]
   videos?: string[]
   title?: string
+  initialIndex?: number
   onClose: () => void
 }
 
 import { useEffect, useRef, useState, useMemo } from 'react'
 
-export default function ImageLightbox({ imageUrl, images, videos, title, onClose }: ImageLightboxProps) {
+export default function ImageLightbox({ imageUrl, images, videos, title, initialIndex, onClose }: ImageLightboxProps) {
   const gallery = useMemo(() => {
     const imgs = images && images.length > 0 ? images : (imageUrl ? [imageUrl] : [])
     const vids = videos && videos.length > 0 ? videos : []
@@ -18,8 +19,9 @@ export default function ImageLightbox({ imageUrl, images, videos, title, onClose
   const startXRef = useRef<number | null>(null)
 
   useEffect(() => {
-    setIndex(0)
-  }, [title])
+    const start = typeof initialIndex === 'number' && initialIndex >= 0 ? initialIndex : 0
+    setIndex(Math.min(start, Math.max(0, (gallery.length || 1) - 1)))
+  }, [title, gallery, initialIndex])
 
   const goPrev = () => setIndex((i) => (gallery.length ? (i - 1 + gallery.length) % gallery.length : 0))
   const goNext = () => setIndex((i) => (gallery.length ? (i + 1) % gallery.length : 0))
