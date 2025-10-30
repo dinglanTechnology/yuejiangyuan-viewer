@@ -1,14 +1,19 @@
 interface ImageLightboxProps {
   imageUrl?: string
   images?: string[]
+  videos?: string[]
   title?: string
   onClose: () => void
 }
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useMemo } from 'react'
 
-export default function ImageLightbox({ imageUrl, images, title, onClose }: ImageLightboxProps) {
-  const gallery = images && images.length > 0 ? images : (imageUrl ? [imageUrl] : [])
+export default function ImageLightbox({ imageUrl, images, videos, title, onClose }: ImageLightboxProps) {
+  const gallery = useMemo(() => {
+    const imgs = images && images.length > 0 ? images : (imageUrl ? [imageUrl] : [])
+    const vids = videos && videos.length > 0 ? videos : []
+    return [...imgs, ...vids]
+  }, [images, imageUrl, videos])
   const [index, setIndex] = useState(0)
   const startXRef = useRef<number | null>(null)
 
@@ -47,34 +52,48 @@ export default function ImageLightbox({ imageUrl, images, title, onClose }: Imag
         }}
       >
         {gallery.length > 0 && (
-          <img
-            src={gallery[index]}
-            alt={title || 'image'}
-            style={{
-              display: 'block',
-              maxWidth: '82vw',
-              maxHeight: '82vh',
-              objectFit: 'contain',
-              background: 'rgba(0,0,0,0.6)'
-            }}
-            onTouchStart={(e) => {
-              startXRef.current = e.touches[0].clientX
-            }}
-            onTouchEnd={(e) => {
-              const startX = startXRef.current
-              startXRef.current = null
-              if (startX == null) return
-              const endX = e.changedTouches[0].clientX
-              const dx = endX - startX
-              if (Math.abs(dx) > 40) {
-                if (dx < 0) {
-                  goNext()
-                } else {
-                  goPrev()
+          (/(\.mp4|\.webm)(\?|$)/i.test(gallery[index]) ? (
+            <video
+              src={gallery[index]}
+              controls
+              style={{
+                display: 'block',
+                maxWidth: '82vw',
+                maxHeight: '82vh',
+                objectFit: 'contain',
+                background: 'black'
+              }}
+            />
+          ) : (
+            <img
+              src={gallery[index]}
+              alt={title || 'image'}
+              style={{
+                display: 'block',
+                maxWidth: '82vw',
+                maxHeight: '82vh',
+                objectFit: 'contain',
+                background: 'rgba(0,0,0,0.6)'
+              }}
+              onTouchStart={(e) => {
+                startXRef.current = e.touches[0].clientX
+              }}
+              onTouchEnd={(e) => {
+                const startX = startXRef.current
+                startXRef.current = null
+                if (startX == null) return
+                const endX = e.changedTouches[0].clientX
+                const dx = endX - startX
+                if (Math.abs(dx) > 40) {
+                  if (dx < 0) {
+                    goNext()
+                  } else {
+                    goPrev()
+                  }
                 }
-              }
-            }}
-          />
+              }}
+            />
+          ))
         )}
         <button
           onClick={onClose}

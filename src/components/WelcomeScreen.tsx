@@ -4,17 +4,34 @@ import { preloadModel } from "../utils/modelPreloader";
 const welcomeImg = "/assets/welcome.jpg";
 
 interface WelcomeScreenProps {
-  onGoToMap?: () => void;
+  onGoToMap?: () => void; // 注释掉 GO TO MAP 功能
   onGoTo360?: () => void;
 }
 
 export default function WelcomeScreen({
-  onGoToMap,
+  // onGoToMap, // 注释掉 GO TO MAP 功能
   onGoTo360,
 }: WelcomeScreenProps) {
   const [isVisible, setIsVisible] = useState(true);
   const [isLoaded, setIsLoaded] = useState(false);
   const [shouldLoadImage, setShouldLoadImage] = useState(false);
+  const [windowSize, setWindowSize] = useState({
+    width: typeof window !== "undefined" ? window.innerWidth : 1024,
+    height: typeof window !== "undefined" ? window.innerHeight : 768,
+  });
+
+  // 监听窗口大小变化
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowSize({
+        width: window.innerWidth,
+        height: window.innerHeight,
+      });
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   // 延迟加载图片，避免阻塞初始渲染
   useEffect(() => {
@@ -40,19 +57,19 @@ export default function WelcomeScreen({
     }
   }, [isVisible]);
 
-  const handleClick = () => {
-    setIsVisible(false);
-    onGoToMap?.();
-  };
+  // const handleClick = () => {
+  //   setIsVisible(false);
+  //   onGoToMap?.();
+  // }; // 注释掉主容器的点击事件
 
   const handleImageLoad = () => {
     setIsLoaded(true);
   };
 
-  const handleGoToMap = () => {
-    setIsVisible(false);
-    onGoToMap?.();
-  };
+  // const handleGoToMap = () => {
+  //   setIsVisible(false);
+  //   onGoToMap?.();
+  // }; // 注释掉 GO TO MAP 处理函数
 
   const handleGoTo360 = () => {
     setIsVisible(false);
@@ -60,65 +77,114 @@ export default function WelcomeScreen({
   };
 
   return (
-    <div
-      style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        width: "100vw",
-        height: "100vh",
-        background: "black",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        zIndex: 9999,
-        opacity: isVisible ? 1 : 0,
-        transition: "opacity 1s ease-in-out",
-        pointerEvents: isVisible ? "auto" : "none", // 当不可见时，不阻止事件传递
-      }}
-      onClick={handleClick}
-    >
+    <>
+      {/* 添加响应式CSS样式 */}
+      <style>
+        {`
+          @media (max-width: 768px) {
+            .welcome-screen-button {
+              font-size: 14px !important;
+              padding: 10px 20px !important;
+              min-width: 120px !important;
+              min-height: 44px !important;
+            }
+          }
+          @media (max-width: 480px) {
+            .welcome-screen-button {
+              font-size: 13px !important;
+              padding: 8px 16px !important;
+              min-width: 100px !important;
+              min-height: 40px !important;
+            }
+          }
+          @media (orientation: landscape) and (max-height: 600px) {
+            .welcome-screen-button-container {
+              bottom: 15% !important;
+            }
+          }
+        `}
+      </style>
       <div
         style={{
-          position: "relative",
-          width: "100%",
-          height: "100%",
+          position: "fixed",
+          top: 0,
+          left: 0,
+          width: "100vw",
+          height: "100vh",
+          background: "black",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
+          zIndex: 9999,
+          opacity: isVisible ? 1 : 0,
+          transition: "opacity 1s ease-in-out",
+          pointerEvents: isVisible ? "auto" : "none", // 当不可见时，不阻止事件传递
         }}
+        // onClick={handleClick} // 注释掉主容器的点击事件
       >
-        {shouldLoadImage && (
-          <img
-            src={welcomeImg}
-            alt="Welcome"
-            loading="eager"
-            style={{
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-              opacity: isLoaded ? 1 : 0,
-              transition: "opacity 0.5s ease-in-out",
-            }}
-            onLoad={handleImageLoad}
-          />
-        )}
+        <div
+          style={{
+            position: "relative",
+            width: "100%",
+            height: "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            // 确保容器能够正确处理不同屏幕比例
+            minHeight: "100vh",
+            minWidth: "100vw",
+          }}
+        >
+          {shouldLoadImage && (
+            <img
+              src={welcomeImg}
+              alt="Welcome"
+              loading="eager"
+              style={{
+                width: "100%",
+                height: "100%",
+                // objectFit: "cover",
+                objectPosition: "center",
+                opacity: isLoaded ? 1 : 0,
+                transition: "opacity 0.5s ease-in-out",
+                // 确保图片在不同设备上都能正确显示
+                minWidth: "100%",
+                minHeight: "100%",
+              }}
+              onLoad={handleImageLoad}
+            />
+          )}
 
-        {/* 按钮容器 */}
-        {isLoaded && shouldLoadImage && (
-          <div
-            style={{
-              position: "absolute",
-              bottom: "25%",
-              left: "50%",
-              transform: "translateX(-50%)",
-              display: "flex",
-              gap: "20px",
-              zIndex: 10000,
-            }}
-          >
-            {/* GO TO MAP 按钮 */}
-            <button
+          {/* 按钮容器 */}
+          {isLoaded && shouldLoadImage && (
+            <div
+              className="welcome-screen-button-container"
+              style={{
+                position: "absolute",
+                bottom: windowSize.width <= 768 ? "20%" : "25%",
+                left: "50%",
+                transform: "translateX(-50%)",
+                display: "flex",
+                gap:
+                  windowSize.width <= 480
+                    ? "10px"
+                    : windowSize.width <= 768
+                    ? "15px"
+                    : "20px",
+                zIndex: 10000,
+                // 响应式设计
+                width: "auto",
+                maxWidth: "90vw",
+                padding:
+                  windowSize.width <= 480
+                    ? "0 10px"
+                    : windowSize.width <= 768
+                    ? "0 15px"
+                    : "0 20px",
+              }}
+            >
+              {/* GO TO MAP 按钮 - 已注释 */}
+              {/* <button
               onClick={(e) => {
                 e.stopPropagation();
                 handleGoToMap();
@@ -150,45 +216,58 @@ export default function WelcomeScreen({
               }}
             >
               GO TO MAP
-            </button>
-            {/* GO TO 360 按钮 */}
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleGoTo360();
-              }}
-              style={{
-                padding: "12px 32px",
-                backgroundColor: "#42A5F5",
-                color: "white",
-                border: "none",
-                borderRadius: "4px",
-                fontSize: "16px",
-                fontWeight: "600",
-                letterSpacing: "1px",
-                cursor: "pointer",
-                transition: "all 0.3s ease",
-                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = "#1E88E5";
-                e.currentTarget.style.transform = "translateY(-2px)";
-                e.currentTarget.style.boxShadow =
-                  "0 6px 16px rgba(0, 0, 0, 0.4)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = "#42A5F5";
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow =
-                  "0 4px 12px rgba(0, 0, 0, 0.3)";
-              }}
-            >
-              GO TO 360
-            </button>
-          </div>
-        )}
+            </button> */}
+              {/* GO TO 360 按钮 */}
+              <button
+                className="welcome-screen-button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleGoTo360();
+                }}
+                style={{
+                  padding: windowSize.width <= 768 ? "10px 24px" : "12px 32px",
+                  backgroundColor: "#D4AF37", // 优雅的金色调，与中心圆形图标呼应
+                  color: "#fff", // 深色文字，在金色背景上更清晰
+                  border: "none",
+                  borderRadius: "6px", // 稍微增加圆角，更现代
+                  fontSize: windowSize.width <= 480 ? "14px" : "16px",
+                  fontWeight: "700", // 增加字重，更突出
+                  letterSpacing: "1.2px", // 增加字间距
+                  cursor: "pointer",
+                  transition: "all 0.3s ease",
+                  boxShadow: "0 4px 16px rgba(212, 175, 55, 0.3)", // 金色阴影
+                  // 响应式按钮尺寸
+                  minWidth: windowSize.width <= 480 ? "120px" : "140px",
+                  minHeight: windowSize.width <= 480 ? "44px" : "48px",
+                  // 触摸设备优化
+                  touchAction: "manipulation",
+                  WebkitTapHighlightColor: "transparent",
+                  // 添加渐变效果
+                  background:
+                    "linear-gradient(135deg, #D4AF37 0%, #B8860B 100%)",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background =
+                    "linear-gradient(135deg, #B8860B 0%, #8B6914 100%)"; // 更深的金色渐变
+                  e.currentTarget.style.transform = "translateY(-2px)";
+                  e.currentTarget.style.boxShadow =
+                    "0 6px 20px rgba(212, 175, 55, 0.4)"; // 增强的金色阴影
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background =
+                    "linear-gradient(135deg, #D4AF37 0%, #B8860B 100%)"; // 回到原始金色渐变
+                  e.currentTarget.style.transform = "translateY(0)";
+                  e.currentTarget.style.boxShadow =
+                    "0 4px 16px rgba(212, 175, 55, 0.3)"; // 回到原始阴影
+                }}
+              >
+                GO TO 360
+              </button>
+            </div>
+          )}
 
-        <div
+          {/* 底部提示文字 - 已注释 */}
+          {/* <div
           style={{
             position: "absolute",
             bottom: "10%",
@@ -202,8 +281,9 @@ export default function WelcomeScreen({
           }}
         >
           GO TO MAP建议在电脑端打开
+        </div> */}
         </div>
       </div>
-    </div>
+    </>
   );
 }
