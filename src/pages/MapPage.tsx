@@ -16,66 +16,88 @@ const hotspots = [
     title: "归家车马院",
     leftPct: 60.89,
     topPct: 38.67,
+    labelPosition: "top-right" as const,
+    bgColor: "#70CEAC", // #FFE452  #A777F4   #70CEAC   #FFA352 #90CFFF
   },
   {
     id: "hl-2",
     title: "售楼部视野",
     leftPct: 59,
     topPct: 44.4,
+    labelPosition: "right" as const,
+    bgColor: "#90CFFF",
   },
   {
     id: "hl-3",
     title: "叠水水景",
     leftPct: 57.5,
     topPct: 49.11,
+    labelPosition: "bottom-right" as const,
+    bgColor: "#70CEAC",
   },
   {
     id: "hl-4",
     title: "桥特写",
     leftPct: 56,
     topPct: 52.34,
+    labelPosition: "left" as const,
+    bgColor: "#A777F4",
   },
   {
     id: "hl-5",
     title: "下沉中庭",
     leftPct: 53.32,
     topPct: 44.37,
+    labelPosition: "top-left" as const,
+    bgColor: "#FFA352",
   },
   {
     id: "hl-6",
     title: "立面",
     leftPct: 55.5,
     topPct: 61.44,
+    labelPosition: "right" as const,
+    bgColor: "#FFE452",
   },
   {
     id: "hl-7",
     title: "廊桥",
     leftPct: 49.23,
     topPct: 64.08,
+    labelPosition: "left" as const,
+    bgColor: "#FFA352",
   },
   {
     id: "hl-8",
     title: "儿童娱乐区",
     leftPct: 48.04,
     topPct: 72.21,
+    labelPosition: "bottom" as const,
+    bgColor: "#FFA352",
   },
   {
     id: "hl-9",
     title: "单元入户门",
     leftPct: 42.68,
     topPct: 60.11,
+    labelPosition: "top-left" as const,
+    bgColor: "#FFE452",
   },
   {
     id: "hl-10",
     title: "户型图",
     leftPct: 52.14,
     topPct: 28.83,
+    labelPosition: "bottom-left" as const,
+    bgColor: "#FFE452",
   },
   {
     id: "hl-11",
     title: "天际阳台",
     leftPct: 49.23,
     topPct: 24.86,
+    labelPosition: "top-left" as const,
+    bgColor: "#A777F4",
   },
 ];
 
@@ -190,10 +212,6 @@ export default function MapPage() {
     }
   };
 
-  const handleBackToHome = () => {
-    navigate("/");
-  };
-
   const handleModelLoadProgress = (progress: number) => {
     setModelLoadProgress(progress);
   };
@@ -219,23 +237,6 @@ export default function MapPage() {
           gap: "10px",
         }}
       >
-        {/* 返回首页按钮 */}
-        <button
-          onClick={handleBackToHome}
-          style={{
-            padding: "10px 20px",
-            background: "rgba(255, 255, 255, 0.2)",
-            border: "1px solid rgba(255, 255, 255, 0.3)",
-            borderRadius: "8px",
-            color: "white",
-            cursor: "pointer",
-            fontSize: "16px",
-            backdropFilter: "blur(10px)",
-          }}
-        >
-          返回首页
-        </button>
-
         {/* 渲染模式切换按钮 - 暂时隐藏 */}
         {/* <button
           onClick={handleToggleRenderMode}
