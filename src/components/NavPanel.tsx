@@ -7,6 +7,7 @@ interface Hotspot {
   imageUrl: string;
   leftPct: number;
   topPct: number;
+  bgColor?: string;
 }
 
 interface NavPanelProps {
@@ -31,6 +32,7 @@ export default function NavPanel({
   onOpenLightbox,
 }: NavPanelProps) {
   const [collapsed, setCollapsed] = useState(false);
+  const [showAllImages, setShowAllImages] = useState(false);
 
   const hasImages = (images?.length || 0) > 0;
   const hasVideos = (videos?.length || 0) > 0;
@@ -204,7 +206,8 @@ export default function NavPanel({
                 const labelOnLeft =
                   hs.title === "天际阳台" ||
                   hs.title === "下沉中庭" ||
-                  hs.title === "单元入户门";
+                  hs.title === "单元入户门" ||
+                  hs.title === "桥特写";
                 return (
                   <div
                     key={hs.id}
@@ -220,38 +223,47 @@ export default function NavPanel({
                       pointerEvents: "auto",
                     }}
                   >
-                    <button
+                    <div
                       onClick={() => onSelect(hs.id)}
                       title={hs.title}
                       style={{
-                        width: 16,
-                        height: 16,
-                        borderRadius: 8,
-                        padding: 0,
-                        border:
-                          currentId === hs.id
-                            ? "2px solid rgba(255,255,255,0.95)"
-                            : "2px solid rgba(255,255,255,0.7)",
-                        background:
-                          currentId === hs.id
-                            ? "rgba(110,231,183,0.95)"
-                            : "rgba(110,231,183,0.8)",
-                        boxShadow:
-                          "0 0 10px rgba(110,231,183,0.95), 0 0 24px rgba(110,231,183,0.5)",
+                        width: "16px",
+                        height: "16px",
+                        backgroundColor: hs.bgColor || "#4A90E2",
+                        borderRadius: "50%",
+                        border: currentId === hs.id
+                          ? "2px solid rgba(255,255,255,0.95)"
+                          : "2px solid rgba(255,255,255,0.7)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        flexShrink: 0,
                         cursor: "pointer",
+                        transition: "all 0.3s ease",
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = "scale(1.12)";
+                        e.currentTarget.style.transform = "scale(1.2)";
                       }}
                       onMouseLeave={(e) => {
                         e.currentTarget.style.transform = "scale(1)";
                       }}
-                    />
+                    >
+                      <img
+                        src="/icon.svg"
+                        alt="icon"
+                        style={{
+                          width: "12px",
+                          height: "12px",
+                          filter: "brightness(0) invert(1)",
+                        }}
+                      />
+                    </div>
                     <div
                       onClick={() => onSelect(hs.id)}
                       style={{
                         color: "#fff",
                         fontSize: 12,
+                        fontWeight: 500,
                         lineHeight: "14px",
                         padding: "4px 8px",
                         borderRadius: 6,
@@ -286,14 +298,14 @@ export default function NavPanel({
             />
 
 					{/* 图集（仅当有图片时显示） */}
-					{hasImages && (
-						<div style={{ padding: '10px 12px' }}>
+          {hasImages && (
+              <div style={{ padding: '10px 12px' }}>
 							<div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
 								<div style={{ width: 4, height: 18, borderRadius: 2, background: 'linear-gradient(180deg, rgba(147,197,253,0.95), rgba(147,197,253,0.35))', boxShadow: '0 0 10px rgba(147,197,253,0.45)' }} />
 								<div style={{ color: '#F0F7FF', fontSize: 16, fontWeight: 700, letterSpacing: 0.5 }}>图集</div>
 							</div>
-							<div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
-							{images!.map((url, idx) => (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+                {(showAllImages ? images! : images!.slice(0, 6)).map((url, idx) => (
 									<button
 										key={idx}
 									onClick={() => onOpenLightbox?.(images!, sampleTitle, idx)}
@@ -311,6 +323,24 @@ export default function NavPanel({
 									</button>
 								))}
 							</div>
+                {(images!.length > 6 && !showAllImages) && (
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 6 }}>
+                    <button
+                      onClick={() => setShowAllImages(true)}
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        color: 'rgba(255,255,255,0.85)',
+                        cursor: 'pointer',
+                        fontSize: 12,
+                        padding: 0,
+                        textDecoration: 'underline'
+                      }}
+                    >
+                      显示更多
+                    </button>
+                  </div>
+                )}
 						</div>
 					)}
 
@@ -427,7 +457,7 @@ export default function NavPanel({
             }}
             onClick={() =>
               window.open(
-                "https://riverfrontmansion.zhilingtech.com/D5VirtualTour",
+                "https://riverfrontmansion.zhilingtech.com/virtual-tour/index.html",
                 "_blank"
               )
             }
