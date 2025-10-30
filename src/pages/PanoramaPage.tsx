@@ -27,19 +27,19 @@ export default function PanoramaPage() {
   const { byTitlePanos, byTitleImages, byTitleVideos, titles } = useMemo(() => indexManifest(), []);
 
   // 与地图页保持一致的坐标映射（仅为已配置坐标的 title 生成热点）
-  const titleToPos = useMemo<Record<string, { leftPct: number; topPct: number }>>(
+  const titleToPos = useMemo<Record<string, { leftPct: number; topPct: number; bgColor: string }>>(
     () => ({
-      "归家车马院": { leftPct: 84, topPct: 38 },
-      "售楼部视野": { leftPct: 78, topPct: 44.4 },
-      "叠水水景": { leftPct: 73, topPct: 50 },
-      "桥特写": { leftPct: 67, topPct: 54 },
-      "下沉中庭": { leftPct: 35, topPct: 45 },
-      "立面": { leftPct: 63, topPct: 90 },
-      "廊桥": { leftPct: 58, topPct: 80 },
-      "儿童娱乐区": { leftPct: 55, topPct: 85 },
-      "单元入户门": { leftPct: 18, topPct: 90 },
-      "户型图": { leftPct: 52.14, topPct: 35 },
-      "天际阳台": { leftPct: 28, topPct: 31 },
+      "归家车马院": { leftPct: 84, topPct: 38, bgColor: "#FFE452" },
+      "售楼部视野": { leftPct: 78, topPct: 44.4, bgColor: "#90CFFF" },
+      "叠水水景": { leftPct: 73, topPct: 50, bgColor: "#70CEAC" },
+      "桥特写": { leftPct: 47, topPct: 54, bgColor: "#A777F4" },
+      "下沉中庭": { leftPct: 35, topPct: 45, bgColor: "#FFA352" },
+      "立面": { leftPct: 63, topPct: 90, bgColor: "#FFE452" },
+      "廊桥": { leftPct: 58, topPct: 80, bgColor: "#FFA352" },
+      "儿童娱乐区": { leftPct: 55, topPct: 85, bgColor: "#FFA352" },
+      "单元入户门": { leftPct: 18, topPct: 90, bgColor: "#FFE452" },
+      "户型图": { leftPct: 52.14, topPct: 35, bgColor: "#FFE452" },
+      "天际阳台": { leftPct: 28, topPct: 31, bgColor: "#A777F4" },
     }),
     []
   );
@@ -73,6 +73,7 @@ export default function PanoramaPage() {
         imageUrl: "",
         leftPct: titleToPos[t].leftPct,
         topPct: titleToPos[t].topPct,
+        bgColor: titleToPos[t].bgColor,
       })),
     [titles, titleToPos]
   );

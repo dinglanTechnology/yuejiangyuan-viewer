@@ -7,6 +7,7 @@ interface Hotspot {
   imageUrl: string;
   leftPct: number;
   topPct: number;
+  bgColor?: string;
 }
 
 interface NavPanelProps {
@@ -205,7 +206,8 @@ export default function NavPanel({
                 const labelOnLeft =
                   hs.title === "天际阳台" ||
                   hs.title === "下沉中庭" ||
-                  hs.title === "单元入户门";
+                  hs.title === "单元入户门" ||
+                  hs.title === "桥特写";
                 return (
                   <div
                     key={hs.id}
@@ -221,38 +223,47 @@ export default function NavPanel({
                       pointerEvents: "auto",
                     }}
                   >
-                    <button
+                    <div
                       onClick={() => onSelect(hs.id)}
                       title={hs.title}
                       style={{
-                        width: 16,
-                        height: 16,
-                        borderRadius: 8,
-                        padding: 0,
-                        border:
-                          currentId === hs.id
-                            ? "2px solid rgba(255,255,255,0.95)"
-                            : "2px solid rgba(255,255,255,0.7)",
-                        background:
-                          currentId === hs.id
-                            ? "rgba(110,231,183,0.95)"
-                            : "rgba(110,231,183,0.8)",
-                        boxShadow:
-                          "0 0 10px rgba(110,231,183,0.95), 0 0 24px rgba(110,231,183,0.5)",
+                        width: "16px",
+                        height: "16px",
+                        backgroundColor: hs.bgColor || "#4A90E2",
+                        borderRadius: "50%",
+                        border: currentId === hs.id
+                          ? "2px solid rgba(255,255,255,0.95)"
+                          : "2px solid rgba(255,255,255,0.7)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        flexShrink: 0,
                         cursor: "pointer",
+                        transition: "all 0.3s ease",
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = "scale(1.12)";
+                        e.currentTarget.style.transform = "scale(1.2)";
                       }}
                       onMouseLeave={(e) => {
                         e.currentTarget.style.transform = "scale(1)";
                       }}
-                    />
+                    >
+                      <img
+                        src="/icon.svg"
+                        alt="icon"
+                        style={{
+                          width: "12px",
+                          height: "12px",
+                          filter: "brightness(0) invert(1)",
+                        }}
+                      />
+                    </div>
                     <div
                       onClick={() => onSelect(hs.id)}
                       style={{
                         color: "#fff",
                         fontSize: 12,
+                        fontWeight: 500,
                         lineHeight: "14px",
                         padding: "4px 8px",
                         borderRadius: 6,
@@ -446,7 +457,7 @@ export default function NavPanel({
             }}
             onClick={() =>
               window.open(
-                "https://riverfrontmansion.zhilingtech.com/D5VirtualTour",
+                "https://riverfrontmansion.zhilingtech.com/virtual-tour/index.html",
                 "_blank"
               )
             }
