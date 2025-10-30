@@ -8,22 +8,95 @@ import ModelLoadingProgress from "../components/ModelLoadingProgress";
 import ImgMap from "../components/ImgMap";
 import { indexManifest } from "../utils/assetManifest";
 
+type LabelPosition =
+  | "top"
+  | "top-left"
+  | "top-right"
+  | "bottom"
+  | "bottom-left"
+  | "bottom-right"
+  | "left"
+  | "right";
+
 // 懒加载大型组件，进行代码分割
 const MapModel = lazy(() => import("../components/MapModel"));
 
 // 位置映射：仅对 manifest 中存在的 title 生效
-const titleToPos: Record<string, { leftPct: number; topPct: number }> = {
-  "归家车马院": { leftPct: 60.89, topPct: 38.67 },
-  "售楼部视野": { leftPct: 59, topPct: 44.4 },
-  "叠水水景": { leftPct: 57.5, topPct: 49.11 },
-  "桥特写": { leftPct: 56, topPct: 52.34 },
-  "下沉中庭": { leftPct: 53.32, topPct: 44.37 },
-  "立面": { leftPct: 55.5, topPct: 61.44 },
-  "廊桥": { leftPct: 49.23, topPct: 64.08 },
-  "儿童娱乐区": { leftPct: 48.04, topPct: 72.21 },
-  "单元入户门": { leftPct: 42.68, topPct: 60.11 },
-  "户型图": { leftPct: 52.14, topPct: 28.83 },
-  "天际阳台": { leftPct: 49.23, topPct: 24.86 },
+const titleToPos: Record<
+  string,
+  {
+    leftPct: number;
+    topPct: number;
+    bgColor?: string;
+    labelPosition?: LabelPosition;
+  }
+> = {
+  归家车马院: {
+    leftPct: 60.89,
+    topPct: 38.67,
+    labelPosition: "top-right",
+    bgColor: "#FFE452",
+  },
+  售楼部视野: {
+    leftPct: 59,
+    topPct: 44.4,
+    labelPosition: "right",
+    bgColor: "#90CFFF",
+  },
+  叠水水景: {
+    leftPct: 57.5,
+    topPct: 49.11,
+    labelPosition: "bottom-right",
+    bgColor: "#70CEAC",
+  },
+  桥特写: {
+    leftPct: 56,
+    topPct: 52.34,
+    labelPosition: "left",
+    bgColor: "#A777F4",
+  },
+  下沉中庭: {
+    leftPct: 53.32,
+    topPct: 44.37,
+    labelPosition: "top-left",
+    bgColor: "#FFA352",
+  },
+  立面: {
+    leftPct: 55.5,
+    topPct: 61.44,
+    labelPosition: "right",
+    bgColor: "#FFE452",
+  },
+  廊桥: {
+    leftPct: 49.23,
+    topPct: 64.08,
+    labelPosition: "left",
+    bgColor: "#FFA352",
+  },
+  儿童娱乐区: {
+    leftPct: 48.04,
+    topPct: 72.21,
+    labelPosition: "bottom",
+    bgColor: "#FFA352",
+  },
+  单元入户门: {
+    leftPct: 42.68,
+    topPct: 60.11,
+    labelPosition: "top-left",
+    bgColor: "#FFE452",
+  },
+  户型图: {
+    leftPct: 52.14,
+    topPct: 28.83,
+    labelPosition: "bottom-left",
+    bgColor: "#FFE452",
+  },
+  天际阳台: {
+    leftPct: 49.23,
+    topPct: 24.86,
+    labelPosition: "top-left",
+    bgColor: "#A777F4",
+  },
 };
 
 export default function MapPage() {
@@ -38,16 +111,22 @@ export default function MapPage() {
   const renderMode: "image" | "3d" = "image";
 
   // 从 manifest 获取资源
-  const { byTitlePanos, byTitleImages, titles } = useMemo(() => indexManifest(), []);
-  const hotspots = useMemo(() =>
-    titles
-      .filter((t) => !!titleToPos[t])
-      .map((t) => ({
-        id: t,
-        title: t,
-        leftPct: titleToPos[t].leftPct,
-        topPct: titleToPos[t].topPct,
-      })),
+  const { byTitlePanos, byTitleImages, titles } = useMemo(
+    () => indexManifest(),
+    []
+  );
+  const hotspots = useMemo(
+    () =>
+      titles
+        .filter((t) => !!titleToPos[t])
+        .map((t) => ({
+          id: t,
+          title: t,
+          leftPct: titleToPos[t].leftPct,
+          topPct: titleToPos[t].topPct,
+          bgColor: titleToPos[t].bgColor,
+          labelPosition: titleToPos[t].labelPosition,
+        })),
     [titles]
   );
   const [modelLoadProgress, setModelLoadProgress] = useState(0);
@@ -63,10 +142,6 @@ export default function MapPage() {
       setLightboxImages(images);
       setLightboxTitle(folderName);
     }
-  };
-
-  const handleBackToHome = () => {
-    navigate("/");
   };
 
   const handleModelLoadProgress = (progress: number) => {
@@ -94,23 +169,6 @@ export default function MapPage() {
           gap: "10px",
         }}
       >
-        {/* 返回首页按钮 */}
-        <button
-          onClick={handleBackToHome}
-          style={{
-            padding: "10px 20px",
-            background: "rgba(255, 255, 255, 0.2)",
-            border: "1px solid rgba(255, 255, 255, 0.3)",
-            borderRadius: "8px",
-            color: "white",
-            cursor: "pointer",
-            fontSize: "16px",
-            backdropFilter: "blur(10px)",
-          }}
-        >
-          返回首页
-        </button>
-
         {/* 渲染模式切换按钮 - 暂时隐藏 */}
         {/* <button
           onClick={handleToggleRenderMode}
@@ -142,8 +200,6 @@ export default function MapPage() {
         isVisible={isModelLoading}
         title="模型加载中..."
       />
-
-      
 
       {/* 根据渲染模式显示不同内容 */}
       {renderMode === "image" ? (
