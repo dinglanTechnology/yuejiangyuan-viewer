@@ -9,11 +9,23 @@ import {
 } from "../utils/positionUtils";
 import type { ImageDisplayInfo } from "../utils/positionUtils";
 
+type LabelPosition =
+  | "top"
+  | "top-left"
+  | "top-right"
+  | "bottom"
+  | "bottom-left"
+  | "bottom-right"
+  | "left"
+  | "right";
+
 interface Hotspot {
   id: string;
   title: string;
   leftPct: number;
   topPct: number;
+  labelPosition?: LabelPosition;
+  bgColor?: string;
 }
 
 interface ImgMapProps {
@@ -87,6 +99,141 @@ export default function ImgMap({ hotspots = [], onHotspotClick }: ImgMapProps) {
     };
   };
 
+  // 计算标签位置
+  const getLabelPosition = (hotspot: Hotspot) => {
+    const position = hotspot.labelPosition || "bottom";
+    const labelOffset = 46; // 标签框距离标记点的距离
+
+    switch (position) {
+      case "top":
+        return {
+          top: `-${labelOffset}px`,
+          left: "6px",
+          transform: "translateX(-50%)",
+          flexDirection: "row" as const,
+        };
+      case "top-left":
+        return {
+          top: `-${labelOffset}px`,
+          left: "6px",
+          transform: "translateX(-100%)",
+          flexDirection: "row" as const,
+        };
+      case "top-right":
+        return {
+          top: `-${labelOffset}px`,
+          left: "6px",
+          transform: "translateX(0%)",
+          flexDirection: "row" as const,
+        };
+      case "bottom":
+        return {
+          top: `${labelOffset}px`,
+          left: "6px",
+          transform: "translateX(-50%)",
+          flexDirection: "row" as const,
+        };
+      case "bottom-left":
+        return {
+          top: `${labelOffset}px`,
+          left: "6px",
+          transform: "translateX(-100%)",
+          flexDirection: "row" as const,
+        };
+      case "bottom-right":
+        return {
+          top: `${labelOffset}px`,
+          left: "6px",
+          transform: "translateX(0%)",
+          flexDirection: "row" as const,
+        };
+      case "left":
+        return {
+          top: "6px",
+          left: `-${labelOffset + 150}px`,
+          transform: "translateY(-50%)",
+          flexDirection: "row" as const,
+        };
+      case "right":
+        return {
+          top: "6px",
+          left: `${labelOffset}px`,
+          transform: "translateY(-50%)",
+          flexDirection: "row" as const,
+        };
+      default:
+        return {
+          top: `${labelOffset}px`,
+          left: "6px",
+          transform: "translateX(-50%)",
+          flexDirection: "row" as const,
+        };
+    }
+  };
+
+  // 计算连接线样式
+  const getConnectionLineStyle = (hotspot: Hotspot) => {
+    const position = hotspot.labelPosition || "bottom";
+    const labelHeight = 40;
+
+    switch (position) {
+      case "top":
+      case "top-left":
+      case "top-right":
+        return {
+          top: "-34px",
+          left: "6px",
+          width: "2px",
+          height: `${labelHeight}px`,
+          backgroundColor: "#FFFFFF",
+          transform: "translateX(-50%)",
+          boxShadow: "0 0 4px rgba(0, 0, 0, 0.1)",
+        };
+      case "bottom":
+      case "bottom-left":
+      case "bottom-right":
+        return {
+          top: "6px",
+          left: "6px",
+          width: "2px",
+          height: `${labelHeight}px`,
+          backgroundColor: "#FFFFFF",
+          transform: "translateX(-50%)",
+          boxShadow: "0 0 4px rgba(0, 0, 0, 0.1)",
+        };
+      case "left":
+        return {
+          top: "6px",
+          left: "-54px",
+          width: `${labelHeight + 20}px`,
+          height: "2px",
+          backgroundColor: "#FFFFFF",
+          transform: "translateY(-50%)",
+          boxShadow: "0 0 4px rgba(0, 0, 0, 0.1)",
+        };
+      case "right":
+        return {
+          top: "6px",
+          left: "6px",
+          width: `${labelHeight}px`,
+          height: "2px",
+          backgroundColor: "#FFFFFF",
+          transform: "translateY(-50%)",
+          boxShadow: "0 0 4px rgba(0, 0, 0, 0.1)",
+        };
+      default:
+        return {
+          top: "6px",
+          left: "6px",
+          width: "2px",
+          height: `${labelHeight}px`,
+          backgroundColor: "#FFFFFF",
+          transform: "translateX(-50%)",
+          boxShadow: "0 0 4px rgba(0, 0, 0, 0.1)",
+        };
+    }
+  };
+
   return (
     <div
       ref={containerRef}
@@ -104,6 +251,9 @@ export default function ImgMap({ hotspots = [], onHotspotClick }: ImgMapProps) {
       {/* 热点标记 */}
       {hotspots.map((hotspot) => {
         const position = getHotspotPosition(hotspot);
+        const labelPosition = getLabelPosition(hotspot);
+        const connectionLineStyle = getConnectionLineStyle(hotspot);
+
         return (
           <div
             key={hotspot.id}
@@ -113,39 +263,128 @@ export default function ImgMap({ hotspots = [], onHotspotClick }: ImgMapProps) {
               left: position.left,
               top: position.top,
               transform: "translate(-50%, -50%)",
-              width: "24px",
-              height: "24px",
-              backgroundColor: "#FF6B35", // 醒目的橙红色
-              border: "3px solid #FFFFFF", // 白色边框增强对比
-              borderRadius: "50%",
               cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: "14px",
-              fontWeight: "bold",
-              color: "#FFFFFF",
               zIndex: 10,
-              transition: "all 0.3s ease",
-              boxShadow:
-                "0 4px 12px rgba(255, 107, 53, 0.6), 0 0 0 2px rgba(255, 255, 255, 0.3)", // 双重阴影效果
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = "#FF8C42"; // 悬停时更亮的橙色
-              e.currentTarget.style.transform =
-                "translate(-50%, -50%) scale(1.3)"; // 更大的缩放效果
-              e.currentTarget.style.boxShadow =
-                "0 6px 16px rgba(255, 107, 53, 0.8), 0 0 0 3px rgba(255, 255, 255, 0.5)"; // 增强阴影
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = "#FF6B35"; // 回到原始橙红色
-              e.currentTarget.style.transform =
-                "translate(-50%, -50%) scale(1)";
-              e.currentTarget.style.boxShadow =
-                "0 4px 12px rgba(255, 107, 53, 0.6), 0 0 0 2px rgba(255, 255, 255, 0.3)";
             }}
           >
-            •
+            {/* 白色圆圈标记点 */}
+            <div
+              style={{
+                width: "12px",
+                height: "12px",
+                backgroundColor: "#FFFFFF",
+                borderRadius: "50%",
+                border: "2px solid rgba(255, 255, 255, 0.8)",
+                boxShadow: `
+                  0 0 0 2px rgba(255, 255, 255, 0.3),
+                  0 0 10px rgba(255, 255, 255, 0.6),
+                  0 0 20px rgba(255, 255, 255, 0.4),
+                  0 0 30px rgba(255, 255, 255, 0.2),
+                  0 2px 8px rgba(0, 0, 0, 0.2)
+                `,
+                transition: "all 0.3s ease",
+                position: "relative",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.boxShadow = `
+                  0 0 0 3px rgba(255, 255, 255, 0.5),
+                  0 0 15px rgba(255, 255, 255, 0.8),
+                  0 0 25px rgba(255, 255, 255, 0.6),
+                  0 0 40px rgba(255, 255, 255, 0.4),
+                  0 0 50px rgba(255, 255, 255, 0.2),
+                  0 4px 12px rgba(0, 0, 0, 0.3)
+                `;
+                e.currentTarget.style.transform = "scale(1.2)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.boxShadow = `
+                  0 0 0 2px rgba(255, 255, 255, 0.3),
+                  0 0 10px rgba(255, 255, 255, 0.6),
+                  0 0 20px rgba(255, 255, 255, 0.4),
+                  0 0 30px rgba(255, 255, 255, 0.2),
+                  0 2px 8px rgba(0, 0, 0, 0.2)
+                `;
+                e.currentTarget.style.transform = "scale(1)";
+              }}
+            />
+
+            {/* 连接线 */}
+            <div
+              style={{
+                position: "absolute",
+                ...connectionLineStyle,
+              }}
+            />
+
+            {/* 标签框 */}
+            <div
+              style={{
+                position: "absolute",
+                ...labelPosition,
+                background: "rgba(79,79,79,0.62)",
+                border: "1px solid #fff",
+                borderRadius: "23px",
+                padding: "8px 12px",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                minWidth: "120px",
+                backdropFilter: "blur(10px)",
+                boxShadow: "0 2px 3px 1px rgba(0, 0, 0, 0.16)",
+                transition: "all 0.3s ease",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = "rgba(80, 80, 80, 0.9)";
+                e.currentTarget.style.transform = `${labelPosition.transform} scale(1.05)`;
+                e.currentTarget.style.boxShadow =
+                  "0 6px 20px rgba(0, 0, 0, 0.4)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor =
+                  "rgba(60, 60, 60, 0.85)";
+                e.currentTarget.style.transform = labelPosition.transform;
+                e.currentTarget.style.boxShadow =
+                  "0 4px 16px rgba(0, 0, 0, 0.3)";
+              }}
+            >
+              {/* 标题文字 */}
+              <span
+                style={{
+                  color: "#FFFFFF",
+                  fontSize: "16px",
+                  fontWeight: "500",
+                  whiteSpace: "nowrap",
+                  textAlign: "center",
+                  flex: 1,
+                }}
+              >
+                {hotspot.title}
+              </span>
+
+              {/* 图标 */}
+              <div
+                style={{
+                  width: "28px",
+                  height: "28px",
+                  backgroundColor: hotspot.bgColor || "#4A90E2",
+                  borderRadius: "50%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                }}
+              >
+                <img
+                  src="/icon.svg"
+                  alt="icon"
+                  style={{
+                    width: "12px",
+                    height: "12px",
+                    filter: "brightness(0) invert(1)", // 将图标变为白色
+                  }}
+                />
+              </div>
+            </div>
           </div>
         );
       })}
