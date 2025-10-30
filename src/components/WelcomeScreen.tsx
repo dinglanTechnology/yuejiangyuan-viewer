@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { preloadModel } from "../utils/modelPreloader";
 // 使用 Vite public 目录的绝对路径
-const welcomeImg = "/assets/welcome.jpg";
+const welcomeImg = "/assets/home-bg.jpg";
 
 interface WelcomeScreenProps {
   onGoToMap?: () => void; // 注释掉 GO TO MAP 功能
@@ -104,6 +104,22 @@ export default function WelcomeScreen({
           }
         `}
       </style>
+      <img
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          width: "100vw",
+          height: "100vh",
+          objectFit: "cover",
+          objectPosition: "center",
+          opacity: isLoaded ? 1 : 0,
+          transition: "opacity 0.5s ease-in-out",
+          zIndex: 9999,
+        }}
+        src="/assets/logo.png"
+        alt="logo"
+      />
       <div
         style={{
           position: "fixed",
