@@ -45,7 +45,7 @@ const titleToPos: Record<
   },
   叠水水景: {
     leftPct: 57.5,
-    topPct: 49.11,
+    topPct: 47,
     labelPosition: "bottom-right",
     bgColor: "#70CEAC",
   },
@@ -57,13 +57,13 @@ const titleToPos: Record<
   },
   下沉中庭: {
     leftPct: 53.32,
-    topPct: 44.37,
+    topPct: 47,
     labelPosition: "top-left",
     bgColor: "#FFA352",
   },
   立面: {
     leftPct: 55.5,
-    topPct: 61.44,
+    topPct: 63,
     labelPosition: "right",
     bgColor: "#FFE452",
   },
@@ -80,14 +80,14 @@ const titleToPos: Record<
     bgColor: "#FFA352",
   },
   单元入户门: {
-    leftPct: 42.68,
+    leftPct: 41,
     topPct: 60.11,
     labelPosition: "top-left",
     bgColor: "#FFE452",
   },
   户型图: {
     leftPct: 52.14,
-    topPct: 28.83,
+    topPct: 27,
     labelPosition: "bottom-left",
     bgColor: "#FFE452",
   },

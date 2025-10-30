@@ -79,9 +79,9 @@ export default function NavPanel({
         zIndex: 200,
         borderRadius: 16,
         overflow: "hidden",
-        background: "rgba(20,20,20,0.5)",
+        background: "rgba(20,20,20,0.4)",
         border: "1px solid rgba(255,255,255,0.12)",
-        boxShadow: "0 8px 30px rgba(0,0,0,0.35)",
+        boxShadow: "0 0 0 5px rgba(255,255,255,0.35), 0 8px 30px rgba(0,0,0,0.35)",
         backdropFilter: "blur(12px) saturate(120%)",
         WebkitBackdropFilter: "blur(12px) saturate(120%)",
         display: "flex",
@@ -319,7 +319,7 @@ export default function NavPanel({
 											cursor: 'pointer'
 										}}
 									>
-										<img src={url} alt={`img-${idx}`} style={{ width: '100%', height: 76, objectFit: 'cover', display: 'block' }} />
+										<img src={url} alt={`img-${idx}`} style={{ width: '100%', height: 50, objectFit: 'cover', display: 'block' }} />
 									</button>
 								))}
 							</div>
@@ -449,11 +449,16 @@ export default function NavPanel({
           {/* <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 6 }}>样板间</div> */}
           <button
             style={{
-              background: "rgba(50, 243, 166, 0.8)",
+              background: "transparent",
+              backgroundImage: "url('/assets/button.png')",
+              backgroundRepeat: "no-repeat",
+              backgroundSize: "100% 100%",
               border: "none",
               color: "#fff",
               fontSize: 16,
               marginBottom: 6,
+              padding: "8px 16px",
+              lineHeight: 1.2,
             }}
             onClick={() =>
               window.open(
