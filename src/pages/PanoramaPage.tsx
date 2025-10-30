@@ -1,109 +1,119 @@
-import { useMemo, useState, Suspense, lazy, useEffect } from "react";
+import { useMemo, useState, Suspense, lazy, useEffect, useCallback, useRef } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import NavPanel from "../components/NavPanel";
 import ImageLightbox from "../components/ImageLightbox";
+import { indexManifest, getFilenameStem } from "../utils/assetManifest";
 
 // 懒加载大型组件，进行代码分割
 const PanoramaScene = lazy(() => import("../components/PanoramaScene"));
 
-// 修正公共资源路径：使用 Vite public 目录下的绝对路径
+// 默认占位图
 const panoAUrl = "/assets/yuejiangyuan.jpg";
-const demo2 = "/assets/demo2.jpg";
-const demo3 = "/assets/demo3.jpg";
 
 export default function PanoramaPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [isTransitioning, setIsTransitioning] = useState(false);
+  
   const [lightboxImages, setLightboxImages] = useState<string[] | null>(null);
   const [lightboxTitle, setLightboxTitle] = useState<string | undefined>(
     undefined
   );
+  const [lightboxVideos, setLightboxVideos] = useState<string[] | null>(null);
 
-  // 索引 assets 目录下的 panoramic.jpg 以及同级 png 图片
-  // 使用 lazy loading，只在需要时加载资源
-  const { folderToPano, folderToPngs } = useMemo(() => {
-    // 改为 lazy loading，避免初始化时加载所有资源
-    const panoEntries = import.meta.glob("../assets/*/panoramic.jpg", {
-      query: "?url",
-      import: "default",
-      eager: false,
-    }) as Record<string, () => Promise<string>>;
-    const pngEntries = import.meta.glob("../assets/*/*.png", {
-      query: "?url",
-      import: "default",
-      eager: false,
-    }) as Record<string, () => Promise<string>>;
+  // 读取 manifest 索引
+  const { byTitlePanos, byTitleImages, byTitleVideos, titles } = useMemo(() => indexManifest(), []);
 
-    const folderToPanoLocal: Record<string, () => Promise<string>> = {};
-    Object.entries(panoEntries).forEach(([path, loader]) => {
-      const match = path.match(/\.\.\/assets\/([^/]+)\/panoramic\.jpg$/);
-      if (match) {
-        const folder = match[1];
-        folderToPanoLocal[folder] = loader;
-      }
-    });
-
-    const folderToPngsLocal: Record<string, (() => Promise<string>)[]> = {};
-    Object.entries(pngEntries).forEach(([path, loader]) => {
-      const match = path.match(/\.\.\/assets\/([^/]+)\/[^/]+\.png$/);
-      if (match) {
-        const folder = match[1];
-        if (!folderToPngsLocal[folder]) folderToPngsLocal[folder] = [];
-        folderToPngsLocal[folder].push(loader);
-      }
-    });
-
-    // 保持 png 顺序稳定（按路径字典序）
-    Object.keys(folderToPngsLocal).forEach((k) => folderToPngsLocal[k].sort());
-
-    return { folderToPano: folderToPanoLocal, folderToPngs: folderToPngsLocal };
-  }, []);
+  // 与地图页保持一致的坐标映射（仅为已配置坐标的 title 生成热点）
+  const titleToPos = useMemo<Record<string, { leftPct: number; topPct: number }>>(
+    () => ({
+      "归家车马院": { leftPct: 84, topPct: 38 },
+      "售楼部视野": { leftPct: 78, topPct: 44.4 },
+      "叠水水景": { leftPct: 73, topPct: 50 },
+      "桥特写": { leftPct: 67, topPct: 54 },
+      "下沉中庭": { leftPct: 35, topPct: 45 },
+      "立面": { leftPct: 63, topPct: 90 },
+      "廊桥": { leftPct: 58, topPct: 80 },
+      "儿童娱乐区": { leftPct: 55, topPct: 85 },
+      "单元入户门": { leftPct: 18, topPct: 90 },
+      "户型图": { leftPct: 52.14, topPct: 35 },
+      "天际阳台": { leftPct: 28, topPct: 31 },
+    }),
+    []
+  );
 
   const [currentPanoUrl, setCurrentPanoUrl] = useState<string>(panoAUrl);
   const [currentFolder, setCurrentFolder] = useState<string | null>(null);
-  const [loadedPanoUrls, setLoadedPanoUrls] = useState<Record<string, string>>(
-    {}
-  );
+  const [loadedPanoUrls, setLoadedPanoUrls] = useState<Record<string, string[]>>({});
+  const [currentPanoIndex, setCurrentPanoIndex] = useState<number>(0);
   const [loadedPngUrls, setLoadedPngUrls] = useState<Record<string, string[]>>(
     {}
   );
+  const [loadedVideoUrls, setLoadedVideoUrls] = useState<Record<string, string[]>>(
+    {}
+  );
   const [isLoadingResource, setIsLoadingResource] = useState(false);
+  const loadTokenRef = useRef(0);
+  // 使用 ref 保存最新的缓存，避免回调依赖这些对象导致身份变化
+  const loadedPanoUrlsRef = useRef(loadedPanoUrls);
+  const loadedPngUrlsRef = useRef(loadedPngUrls);
+  const loadedVideoUrlsRef = useRef(loadedVideoUrls);
+  useEffect(() => { loadedPanoUrlsRef.current = loadedPanoUrls; }, [loadedPanoUrls]);
+  useEffect(() => { loadedPngUrlsRef.current = loadedPngUrls; }, [loadedPngUrls]);
+  useEffect(() => { loadedVideoUrlsRef.current = loadedVideoUrls; }, [loadedVideoUrls]);
 
-  const hotspots = [
-    { id: "hl-2", title: "楼栋渲染", imageUrl: demo3, leftPct: 58, topPct: 34 },
-    { id: "hl-3", title: "户型图", imageUrl: demo2, leftPct: 72, topPct: 48 },
-    {
-      id: "hl-5",
-      title: "单元入户门",
-      imageUrl: demo2,
-      leftPct: 66,
-      topPct: 70,
-    },
-    { id: "hl-6", title: "阳台", imageUrl: demo3, leftPct: 30, topPct: 78 },
-    { id: "hl-7", title: "大门前场", imageUrl: demo3, leftPct: 55, topPct: 95 },
-  ];
+  const hotspots = useMemo(() =>
+    titles
+      .filter((t) => !!titleToPos[t])
+      .map((t) => ({
+        id: t,
+        title: t,
+        imageUrl: "",
+        leftPct: titleToPos[t].leftPct,
+        topPct: titleToPos[t].topPct,
+      })),
+    [titles, titleToPos]
+  );
 
-  // 全景内图片热点（方位以弧度计，yaw=0 指向画面正前方，pitch=0 水平）
-  // 从当前文件夹的 PNG 图片中随机选择一张作为热点图片
-  const panoImageHotspots = useMemo(() => {
-    if (!currentFolder || !loadedPngUrls[currentFolder]?.length) {
-      return [];
+  // 取消全景内的图片热点，改为在导航面板下展示图集/视频集
+
+  
+
+  const loadPanorama = useCallback(async (folderName: string) => {
+    const token = ++loadTokenRef.current;
+    const panos = byTitlePanos[folderName] || [];
+    const imgs = byTitleImages[folderName] || [];
+    const vids = byTitleVideos[folderName] || [];
+    if (!panos.length && !imgs.length && !vids.length) return;
+    setIsLoadingResource(true);
+    try {
+      if (token !== loadTokenRef.current) return;
+      if (panos.length) {
+        setLoadedPanoUrls((prev) => ({ ...prev, [folderName]: panos }));
+        setCurrentPanoIndex(0);
+        setCurrentPanoUrl(panos[0]);
+      }
+      if (imgs.length) setLoadedPngUrls((prev) => ({ ...prev, [folderName]: imgs }));
+      if (vids.length) setLoadedVideoUrls((prev) => ({ ...prev, [folderName]: vids }));
+      setCurrentFolder(folderName);
+    } finally {
+      setIsLoadingResource(false);
     }
-    const images = loadedPngUrls[currentFolder];
-    const randomImage = images[Math.floor(Math.random() * images.length)];
-    return [
-      {
-        id: "pano-photo-1",
-        title: "查看图片",
-        imageUrl: randomImage,
-        yaw: 0,
-        pitch: 0,
-      },
-    ];
-  }, [currentFolder, loadedPngUrls]);
+  }, [byTitlePanos, byTitleImages, byTitleVideos]);
+
+  const loadRandomPanorama = useCallback(async () => {
+    const availableFolders = titles;
+    if (availableFolders.length === 0) {
+      console.error("没有可用的全景图");
+      return;
+    }
+
+    // 随机选择一个文件夹
+    const randomFolder =
+      availableFolders[Math.floor(Math.random() * availableFolders.length)];
+    await loadPanorama(randomFolder);
+  }, [titles, loadPanorama]);
 
   // 根据URL参数加载对应的全景图
   useEffect(() => {
@@ -114,56 +124,11 @@ export default function PanoramaPage() {
       // 如果没有指定文件夹，随机选择一个
       loadRandomPanorama();
     }
-  }, [searchParams]);
+  }, [searchParams, loadPanorama, loadRandomPanorama]);
 
-  const loadPanorama = async (folderName: string) => {
-    const panoLoader = folderToPano[folderName];
-    const pngLoaders = folderToPngs[folderName];
-
-    if (panoLoader) {
-      setIsLoadingResource(true);
-      try {
-        const url = loadedPanoUrls[folderName] || (await panoLoader());
-        if (!loadedPanoUrls[folderName]) {
-          setLoadedPanoUrls((prev) => ({ ...prev, [folderName]: url }));
-        }
-
-        // 加载 PNG 图片（如果有）
-        if (pngLoaders?.length) {
-          const pngUrls =
-            loadedPngUrls[folderName] ||
-            (await Promise.all(pngLoaders.map((loader) => loader())));
-          if (!loadedPngUrls[folderName]) {
-            setLoadedPngUrls((prev) => ({ ...prev, [folderName]: pngUrls }));
-          }
-        }
-
-        setCurrentPanoUrl(url);
-        setCurrentFolder(folderName);
-        setIsLoadingResource(false);
-      } catch (error) {
-        console.error("加载全景图失败:", error);
-        setIsLoadingResource(false);
-      }
-    }
-  };
-
-  const loadRandomPanorama = async () => {
-    const availableFolders = Object.keys(folderToPano);
-    if (availableFolders.length === 0) {
-      console.error("没有可用的全景图");
-      return;
-    }
-
-    // 随机选择一个文件夹
-    const randomFolder =
-      availableFolders[Math.floor(Math.random() * availableFolders.length)];
-    await loadPanorama(randomFolder);
-  };
-
-  const handleBackToHome = () => {
-    navigate("/");
-  };
+  // const handleBackToHome = () => {
+  //   navigate("/");
+  // };
 
   const handleBackToMap = () => {
     navigate("/map");
@@ -173,58 +138,20 @@ export default function PanoramaPage() {
     const hs = hotspots.find((h) => h.id === id);
     if (!hs) return;
     const folderName = hs.title;
-    const panoLoader = folderToPano[folderName];
-    const pngLoaders = folderToPngs[folderName];
-    if (panoLoader) {
-      try {
-        const url =
-          loadedPanoUrls[folderName] || (await panoLoader());
-        if (!loadedPanoUrls[folderName]) {
-          setLoadedPanoUrls((prev) => ({
-            ...prev,
-            [folderName]: url,
-          }));
-        }
-
-        // 加载 PNG 图片（如果有）
-        if (pngLoaders?.length) {
-          const pngUrls =
-            loadedPngUrls[folderName] ||
-            (await Promise.all(pngLoaders.map((loader) => loader())));
-          if (!loadedPngUrls[folderName]) {
-            setLoadedPngUrls((prev) => ({
-              ...prev,
-              [folderName]: pngUrls,
-            }));
-          }
-        }
-
-        setCurrentPanoUrl(url);
-        setCurrentFolder(folderName);
-      } catch (error) {
-        console.error("加载全景图失败:", error);
-      }
-    } else if (pngLoaders?.length) {
-      // 如果只有 PNG 图片，直接弹出弹窗，不改变 currentFolder
-      // 避免影响全景图中的热点图片
-      try {
-        const pngUrls =
-          loadedPngUrls[folderName] ||
-          (await Promise.all(pngLoaders.map((loader) => loader())));
-        if (!loadedPngUrls[folderName]) {
-          setLoadedPngUrls((prev) => ({
-            ...prev,
-            [folderName]: pngUrls,
-          }));
-        }
-        setLightboxImages(pngUrls);
-        setLightboxTitle(folderName);
-        // 注意：不更新 currentFolder，保持当前全景图的热点图片不变
-      } catch (error) {
-        console.error("加载 PNG 图片失败:", error);
-      }
-    } else {
-      // 无资源则不处理
+    const panos = byTitlePanos[folderName] || [];
+    const imgs = byTitleImages[folderName] || [];
+    const vids = byTitleVideos[folderName] || [];
+    if (panos.length) {
+      setLoadedPanoUrls((prev) => ({ ...prev, [folderName]: panos }));
+      setCurrentPanoIndex(0);
+      setCurrentPanoUrl(panos[0]);
+      setCurrentFolder(folderName);
+      if (imgs.length) setLoadedPngUrls((prev) => ({ ...prev, [folderName]: imgs }));
+      if (vids.length) setLoadedVideoUrls((prev) => ({ ...prev, [folderName]: vids }));
+    } else if (imgs.length || vids.length) {
+      setLightboxImages(imgs.length ? imgs : []);
+      setLightboxVideos(vids.length ? vids : []);
+      setLightboxTitle(folderName);
     }
   };
 
@@ -241,7 +168,7 @@ export default function PanoramaPage() {
           gap: "10px",
         }}
       >
-        <button
+        {/* <button
           onClick={handleBackToHome}
           style={{
             padding: "10px 20px",
@@ -255,7 +182,7 @@ export default function PanoramaPage() {
           }}
         >
           返回首页
-        </button>
+        </button> */}
         <button
           onClick={handleBackToMap}
           style={{
@@ -309,31 +236,81 @@ export default function PanoramaPage() {
         <Suspense fallback={null}>
           <PanoramaScene
             imageUrl={currentPanoUrl}
-            imageHotspots={panoImageHotspots}
-            onHotspotClick={() => {
-              if (currentFolder && loadedPngUrls[currentFolder]?.length) {
-                setLightboxImages(loadedPngUrls[currentFolder]);
-                setLightboxTitle(currentFolder);
-              }
-            }}
+            imageHotspots={[]}
           />
         </Suspense>
         <OrbitControls enableZoom={false} />
       </Canvas>
 
+      {/* 多全景列表（左下角）：展示所有全景，当前高亮，可点击切换 */}
+      {currentFolder && (loadedPanoUrls[currentFolder]?.length || 0) > 0 && (
+        <div
+          style={{
+            position: "absolute",
+            left: 20,
+            bottom: 20,
+            zIndex: 100,
+            display: "flex",
+            gap: 8,
+            flexWrap: "wrap",
+            maxWidth: "40vw",
+          }}
+        >
+          {(loadedPanoUrls[currentFolder] || []).map((url, idx) => {
+            const isActive = idx === currentPanoIndex;
+            return (
+              <button
+                key={url}
+                onClick={() => {
+                  setCurrentPanoIndex(idx);
+                  setCurrentPanoUrl(url);
+                }}
+                style={{
+                  padding: "8px 12px",
+                  background: isActive
+                    ? "rgba(124, 179, 66, 0.8)"
+                    : "rgba(255, 255, 255, 0.2)",
+                  border: isActive
+                    ? "1px solid rgba(124, 179, 66, 0.6)"
+                    : "1px solid rgba(255, 255, 255, 0.3)",
+                  borderRadius: 8,
+                  color: "white",
+                  cursor: "pointer",
+                  fontSize: 14,
+                  backdropFilter: "blur(10px)",
+                  whiteSpace: "nowrap",
+                }}
+                title={getFilenameStem(url)}
+              >
+                {getFilenameStem(url)}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       {/* 导航面板 */}
       <NavPanel
         hotspots={hotspots}
+        images={currentFolder ? loadedPngUrls[currentFolder] : undefined}
+        videos={currentFolder ? loadedVideoUrls[currentFolder] : undefined}
+        sampleTitle={currentFolder || undefined}
+        onOpenLightbox={(imgs, title) => {
+          setLightboxImages(imgs);
+          setLightboxTitle(title);
+        }}
         onSelect={handleNavSelect}
       />
 
       {/* 图片弹窗 */}
-      {lightboxImages && (
+      {(lightboxImages || lightboxVideos) && (
         <ImageLightbox
-          images={lightboxImages}
+          images={lightboxImages || undefined}
+          videos={lightboxVideos || undefined}
           title={lightboxTitle}
           onClose={() => {
             setLightboxImages(null);
+            setLightboxVideos(null);
             setLightboxTitle(undefined);
           }}
         />
