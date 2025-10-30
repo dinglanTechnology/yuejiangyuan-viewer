@@ -31,6 +31,7 @@ export default function NavPanel({
   onOpenLightbox,
 }: NavPanelProps) {
   const [collapsed, setCollapsed] = useState(false);
+  const [showAllImages, setShowAllImages] = useState(false);
 
   const hasImages = (images?.length || 0) > 0;
   const hasVideos = (videos?.length || 0) > 0;
@@ -286,14 +287,14 @@ export default function NavPanel({
             />
 
 					{/* 图集（仅当有图片时显示） */}
-					{hasImages && (
-						<div style={{ padding: '10px 12px' }}>
+          {hasImages && (
+              <div style={{ padding: '10px 12px' }}>
 							<div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
 								<div style={{ width: 4, height: 18, borderRadius: 2, background: 'linear-gradient(180deg, rgba(147,197,253,0.95), rgba(147,197,253,0.35))', boxShadow: '0 0 10px rgba(147,197,253,0.45)' }} />
 								<div style={{ color: '#F0F7FF', fontSize: 16, fontWeight: 700, letterSpacing: 0.5 }}>图集</div>
 							</div>
-							<div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
-							{images!.map((url, idx) => (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+                {(showAllImages ? images! : images!.slice(0, 6)).map((url, idx) => (
 									<button
 										key={idx}
 									onClick={() => onOpenLightbox?.(images!, sampleTitle, idx)}
@@ -311,6 +312,24 @@ export default function NavPanel({
 									</button>
 								))}
 							</div>
+                {(images!.length > 6 && !showAllImages) && (
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 6 }}>
+                    <button
+                      onClick={() => setShowAllImages(true)}
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        color: 'rgba(255,255,255,0.85)',
+                        cursor: 'pointer',
+                        fontSize: 12,
+                        padding: 0,
+                        textDecoration: 'underline'
+                      }}
+                    >
+                      显示更多
+                    </button>
+                  </div>
+                )}
 						</div>
 					)}
 
