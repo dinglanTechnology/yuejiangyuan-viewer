@@ -168,7 +168,9 @@ export default function NavPanel({
 							}}
 						/>
 						<div style={{ position: "absolute", inset: 0 }}>
-							{hotspots.map((hs) => (
+						{hotspots.map((hs) => {
+							const labelOnLeft = hs.title === '天际阳台' || hs.title === '下沉中庭' || hs.title === '单元入户门';
+							return (
 								<div
 									key={hs.id}
 									style={{
@@ -177,6 +179,7 @@ export default function NavPanel({
 										top: `${hs.topPct}%`,
 										transform: 'translate(-50%, -50%)',
 										display: 'flex',
+										flexDirection: labelOnLeft ? 'row-reverse' : 'row',
 										alignItems: 'center',
 										gap: 8,
 										pointerEvents: 'auto'
@@ -221,7 +224,8 @@ export default function NavPanel({
 										{hs.title}
 									</div>
 								</div>
-							))}
+							);
+						})}
 						</div>
 				</div>
 			</div>
@@ -289,12 +293,13 @@ export default function NavPanel({
 			)}
 
 			{/* 样板间标题 */}
-			<div style={{ padding: '10px 12px', color: '#fff' }}>
-				<div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+			<div style={{ padding: '10px 12px', color: '#fff',display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+				{/* <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}> */}
 					{/* <div style={{ width: 4, height: 18, borderRadius: 2, background: 'linear-gradient(180deg, rgba(248,113,113,0.95), rgba(248,113,113,0.35))', boxShadow: '0 0 10px rgba(248,113,113,0.4)' }} /> */}
 					{/* <div style={{ color: '#FFEFEF', fontSize: 16, fontWeight: 700, letterSpacing: 0.5 }}>样板间标题</div> */}
-				</div>
-				<div style={{ fontSize: 16, fontWeight: 600, marginBottom: 6 }}>样板间</div>
+				{/* </div> */}
+				{/* <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 6 }}>样板间</div> */}
+				<button style={{ background: 'rgba(50, 243, 166, 0.8)', border: 'none', color: '#fff', fontSize: 16, marginBottom: 6 }}>前往样板间</button>
 				{/* <div style={{ fontSize: 14, opacity: 0.9 }}>{sampleTitle || '未命名'}</div> */}
 			</div>
 			</div>

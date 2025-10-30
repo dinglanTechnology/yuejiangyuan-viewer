@@ -6,78 +6,25 @@ import CameraLock from "../components/CameraLock";
 import ImageLightbox from "../components/ImageLightbox";
 import ModelLoadingProgress from "../components/ModelLoadingProgress";
 import ImgMap from "../components/ImgMap";
+import { indexManifest } from "../utils/assetManifest";
 
 // 懒加载大型组件，进行代码分割
 const MapModel = lazy(() => import("../components/MapModel"));
 
-const hotspots = [
-  {
-    id: "hl-1",
-    title: "归家车马院",
-    leftPct: 60.89,
-    topPct: 38.67,
-  },
-  {
-    id: "hl-2",
-    title: "售楼部视野",
-    leftPct: 59,
-    topPct: 44.4,
-  },
-  {
-    id: "hl-3",
-    title: "叠水水景",
-    leftPct: 57.5,
-    topPct: 49.11,
-  },
-  {
-    id: "hl-4",
-    title: "桥特写",
-    leftPct: 56,
-    topPct: 52.34,
-  },
-  {
-    id: "hl-5",
-    title: "下沉中庭",
-    leftPct: 53.32,
-    topPct: 44.37,
-  },
-  {
-    id: "hl-6",
-    title: "立面",
-    leftPct: 55.5,
-    topPct: 61.44,
-  },
-  {
-    id: "hl-7",
-    title: "廊桥",
-    leftPct: 49.23,
-    topPct: 64.08,
-  },
-  {
-    id: "hl-8",
-    title: "儿童娱乐区",
-    leftPct: 48.04,
-    topPct: 72.21,
-  },
-  {
-    id: "hl-9",
-    title: "单元入户门",
-    leftPct: 42.68,
-    topPct: 60.11,
-  },
-  {
-    id: "hl-10",
-    title: "户型图",
-    leftPct: 52.14,
-    topPct: 28.83,
-  },
-  {
-    id: "hl-11",
-    title: "天际阳台",
-    leftPct: 49.23,
-    topPct: 24.86,
-  },
-];
+// 位置映射：仅对 manifest 中存在的 title 生效
+const titleToPos: Record<string, { leftPct: number; topPct: number }> = {
+  "归家车马院": { leftPct: 60.89, topPct: 38.67 },
+  "售楼部视野": { leftPct: 59, topPct: 44.4 },
+  "叠水水景": { leftPct: 57.5, topPct: 49.11 },
+  "桥特写": { leftPct: 56, topPct: 52.34 },
+  "下沉中庭": { leftPct: 53.32, topPct: 44.37 },
+  "立面": { leftPct: 55.5, topPct: 61.44 },
+  "廊桥": { leftPct: 49.23, topPct: 64.08 },
+  "儿童娱乐区": { leftPct: 48.04, topPct: 72.21 },
+  "单元入户门": { leftPct: 42.68, topPct: 60.11 },
+  "户型图": { leftPct: 52.14, topPct: 28.83 },
+  "天际阳台": { leftPct: 49.23, topPct: 24.86 },
+};
 
 export default function MapPage() {
   const navigate = useNavigate();
@@ -85,108 +32,36 @@ export default function MapPage() {
   const [lightboxTitle, setLightboxTitle] = useState<string | undefined>(
     undefined
   );
+  // 当前选中热点（可按需用于高亮 NavPanel 等）
 
   // 渲染模式：默认使用静态鸟瞰地图
   const renderMode: "image" | "3d" = "image";
 
-  // 索引 assets 目录下的 panoramic.jpg 以及同级 png 图片
-  // 使用 lazy loading，只在需要时加载资源
-  const { folderToPano, folderToPngs } = useMemo(() => {
-    // 改为 lazy loading，避免初始化时加载所有资源
-    const panoEntries = import.meta.glob("../assets/*/panoramic.jpg", {
-      query: "?url",
-      import: "default",
-      eager: false,
-    }) as Record<string, () => Promise<string>>;
-    const pngEntries = import.meta.glob("../assets/*/*.png", {
-      query: "?url",
-      import: "default",
-      eager: false,
-    }) as Record<string, () => Promise<string>>;
-
-    const folderToPanoLocal: Record<string, () => Promise<string>> = {};
-    Object.entries(panoEntries).forEach(([path, loader]) => {
-      const match = path.match(/\.\.\/assets\/([^/]+)\/panoramic\.jpg$/);
-      if (match) {
-        const folder = match[1];
-        folderToPanoLocal[folder] = loader;
-      }
-    });
-
-    const folderToPngsLocal: Record<string, (() => Promise<string>)[]> = {};
-    Object.entries(pngEntries).forEach(([path, loader]) => {
-      const match = path.match(/\.\.\/assets\/([^/]+)\/[^/]+\.png$/);
-      if (match) {
-        const folder = match[1];
-        if (!folderToPngsLocal[folder]) folderToPngsLocal[folder] = [];
-        folderToPngsLocal[folder].push(loader);
-      }
-    });
-
-    // 保持 png 顺序稳定（按路径字典序）
-    Object.keys(folderToPngsLocal).forEach((k) => folderToPngsLocal[k].sort());
-
-    return { folderToPano: folderToPanoLocal, folderToPngs: folderToPngsLocal };
-  }, []);
-
-  const [loadedPanoUrls, setLoadedPanoUrls] = useState<Record<string, string>>(
-    {}
+  // 从 manifest 获取资源
+  const { byTitlePanos, byTitleImages, titles } = useMemo(() => indexManifest(), []);
+  const hotspots = useMemo(() =>
+    titles
+      .filter((t) => !!titleToPos[t])
+      .map((t) => ({
+        id: t,
+        title: t,
+        leftPct: titleToPos[t].leftPct,
+        topPct: titleToPos[t].topPct,
+      })),
+    [titles]
   );
-  const [loadedPngUrls, setLoadedPngUrls] = useState<Record<string, string[]>>(
-    {}
-  );
-  const [isLoadingResource, setIsLoadingResource] = useState(false);
   const [modelLoadProgress, setModelLoadProgress] = useState(0);
   const [isModelLoading, setIsModelLoading] = useState(false);
 
   const handlePointClick = async (label: string) => {
     const folderName = label;
-    const panoLoader = folderToPano[folderName];
-    const pngLoaders = folderToPngs[folderName];
-
-    if (panoLoader) {
-      // 如果有全景图，跳转到全景图页面
-      setIsLoadingResource(true);
-      try {
-        const url = loadedPanoUrls[folderName] || (await panoLoader());
-        if (!loadedPanoUrls[folderName]) {
-          setLoadedPanoUrls((prev) => ({ ...prev, [folderName]: url }));
-        }
-
-        // 加载 PNG 图片（如果有）
-        if (pngLoaders?.length) {
-          const pngUrls =
-            loadedPngUrls[folderName] ||
-            (await Promise.all(pngLoaders.map((loader) => loader())));
-          if (!loadedPngUrls[folderName]) {
-            setLoadedPngUrls((prev) => ({ ...prev, [folderName]: pngUrls }));
-          }
-        }
-
-        // 跳转到全景图页面，传递参数
-        navigate(`/panorama?folder=${encodeURIComponent(folderName)}`);
-        setIsLoadingResource(false);
-      } catch (error) {
-        console.error("加载资源失败:", error);
-        setIsLoadingResource(false);
-      }
-    } else if (pngLoaders?.length) {
-      // 如果只有 PNG 图片，先加载再弹出弹窗
-      setIsLoadingResource(true);
-      try {
-        const pngUrls =
-          loadedPngUrls[folderName] ||
-          (await Promise.all(pngLoaders.map((loader) => loader())));
-        if (!loadedPngUrls[folderName]) {
-          setLoadedPngUrls((prev) => ({ ...prev, [folderName]: pngUrls }));
-        }
-        setLightboxImages(pngUrls);
-        setLightboxTitle(folderName);
-        setIsLoadingResource(false);
-      } catch (error) {
-        console.error("加载 PNG 图片失败:", error);
-        setIsLoadingResource(false);
-      }
+    const panos = byTitlePanos[folderName] || [];
+    const images = byTitleImages[folderName] || [];
+    if (panos.length) {
+      navigate(`/panorama?folder=${encodeURIComponent(folderName)}`);
+    } else if (images.length) {
+      setLightboxImages(images);
+      setLightboxTitle(folderName);
     }
   };
 
@@ -268,36 +143,7 @@ export default function MapPage() {
         title="模型加载中..."
       />
 
-      {/* 资源加载指示器 */}
-      {isLoadingResource && (
-        <div
-          style={{
-            position: "fixed",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            zIndex: 10000,
-            color: "white",
-            fontSize: "18px",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: "20px",
-          }}
-        >
-          <div
-            style={{
-              width: "50px",
-              height: "50px",
-              border: "4px solid rgba(255, 255, 255, 0.3)",
-              borderTop: "4px solid white",
-              borderRadius: "50%",
-              animation: "spin 1s linear infinite",
-            }}
-          />
-          <div>加载中...</div>
-        </div>
-      )}
+      
 
       {/* 根据渲染模式显示不同内容 */}
       {renderMode === "image" ? (

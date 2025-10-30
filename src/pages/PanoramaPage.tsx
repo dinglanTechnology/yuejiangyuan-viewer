@@ -11,8 +11,6 @@ const PanoramaScene = lazy(() => import("../components/PanoramaScene"));
 
 // 默认占位图
 const panoAUrl = "/assets/yuejiangyuan.jpg";
-const demo2 = "/assets/demo2.jpg";
-const demo3 = "/assets/demo3.jpg";
 
 export default function PanoramaPage() {
   const navigate = useNavigate();
@@ -26,6 +24,24 @@ export default function PanoramaPage() {
 
   // 读取 manifest 索引
   const { byTitlePanos, byTitleImages, byTitleVideos, titles } = useMemo(() => indexManifest(), []);
+
+  // 与地图页保持一致的坐标映射（仅为已配置坐标的 title 生成热点）
+  const titleToPos = useMemo<Record<string, { leftPct: number; topPct: number }>>(
+    () => ({
+      "归家车马院": { leftPct: 84, topPct: 38 },
+      "售楼部视野": { leftPct: 78, topPct: 44.4 },
+      "叠水水景": { leftPct: 73, topPct: 50 },
+      "桥特写": { leftPct: 67, topPct: 54 },
+      "下沉中庭": { leftPct: 35, topPct: 45 },
+      "立面": { leftPct: 63, topPct: 90 },
+      "廊桥": { leftPct: 58, topPct: 80 },
+      "儿童娱乐区": { leftPct: 55, topPct: 85 },
+      "单元入户门": { leftPct: 18, topPct: 90 },
+      "户型图": { leftPct: 52.14, topPct: 35 },
+      "天际阳台": { leftPct: 28, topPct: 31 },
+    }),
+    []
+  );
 
   const [currentPanoUrl, setCurrentPanoUrl] = useState<string>(panoAUrl);
   const [currentFolder, setCurrentFolder] = useState<string | null>(null);
@@ -47,19 +63,18 @@ export default function PanoramaPage() {
   useEffect(() => { loadedPngUrlsRef.current = loadedPngUrls; }, [loadedPngUrls]);
   useEffect(() => { loadedVideoUrlsRef.current = loadedVideoUrls; }, [loadedVideoUrls]);
 
-  const hotspots = [
-    { id: "hl-2", title: "楼栋渲染", imageUrl: demo3, leftPct: 58, topPct: 34 },
-    { id: "hl-3", title: "户型图", imageUrl: demo2, leftPct: 72, topPct: 48 },
-    {
-      id: "hl-5",
-      title: "单元入户门",
-      imageUrl: demo2,
-      leftPct: 66,
-      topPct: 70,
-    },
-    { id: "hl-6", title: "阳台", imageUrl: demo3, leftPct: 30, topPct: 78 },
-    { id: "hl-7", title: "大门前场", imageUrl: demo3, leftPct: 55, topPct: 95 },
-  ];
+  const hotspots = useMemo(() =>
+    titles
+      .filter((t) => !!titleToPos[t])
+      .map((t) => ({
+        id: t,
+        title: t,
+        imageUrl: "",
+        leftPct: titleToPos[t].leftPct,
+        topPct: titleToPos[t].topPct,
+      })),
+    [titles, titleToPos]
+  );
 
   // 取消全景内的图片热点，改为在导航面板下展示图集/视频集
 
@@ -111,9 +126,9 @@ export default function PanoramaPage() {
     }
   }, [searchParams, loadPanorama, loadRandomPanorama]);
 
-  const handleBackToHome = () => {
-    navigate("/");
-  };
+  // const handleBackToHome = () => {
+  //   navigate("/");
+  // };
 
   const handleBackToMap = () => {
     navigate("/map");
@@ -153,7 +168,7 @@ export default function PanoramaPage() {
           gap: "10px",
         }}
       >
-        <button
+        {/* <button
           onClick={handleBackToHome}
           style={{
             padding: "10px 20px",
@@ -167,7 +182,7 @@ export default function PanoramaPage() {
           }}
         >
           返回首页
-        </button>
+        </button> */}
         <button
           onClick={handleBackToMap}
           style={{
