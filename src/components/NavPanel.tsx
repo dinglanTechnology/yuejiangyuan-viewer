@@ -20,7 +20,7 @@ interface NavPanelProps {
 	onOpenLightbox?: (images: string[], title?: string, startIndex?: number) => void; // 打开外部图片预览
 }
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function NavPanel({
   hotspots,
@@ -33,6 +33,11 @@ export default function NavPanel({
 }: NavPanelProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [showAllImages, setShowAllImages] = useState(false);
+
+  // 当图集来源变化时，自动收起“显示更多”
+  useEffect(() => {
+    setShowAllImages(false);
+  }, [images]);
 
   const hasImages = (images?.length || 0) > 0;
   const hasVideos = (videos?.length || 0) > 0;
@@ -74,7 +79,8 @@ export default function NavPanel({
         position: "absolute",
         top: 20,
         right: 20,
-        bottom: 20,
+        // 高度由内容决定，但不超过当前最大高度（视口-40px）
+        maxHeight: "calc(100vh - 40px)",
         width: 360,
         zIndex: 200,
         borderRadius: 16,
@@ -133,7 +139,6 @@ export default function NavPanel({
 					}}
 				/> */}
         {/* <div style={{ color: "#fff", fontSize: 14, opacity: 0.9 }}>功能面板</div> */}
-        <div style={{ flex: 1 }} />
         <button
           onClick={() => setCollapsed(true)}
           title="收起"
@@ -148,13 +153,37 @@ export default function NavPanel({
         >
           ⇤
         </button>
+        <div style={{ flex: 1 }} />
+        <button
+          style={{
+            background: "transparent",
+            backgroundImage: "url('/assets/button.png')",
+            backgroundRepeat: "no-repeat",
+            backgroundSize: "100% 100%",
+            border: "none",
+            color: "#fff",
+            fontSize: 14,
+            padding: "6px 12px",
+            lineHeight: 1.2,
+            cursor: "pointer",
+          }}
+          onClick={() =>
+            window.open(
+              "https://riverfrontmansion.zhilingtech.com/virtual-tour/index.html",
+              "_blank"
+            )
+          }
+        >
+          前往样板间
+        </button>
       </div>
 
       <div
         className="navpanel-scroll"
         style={{
           position: "relative",
-          flex: 1,
+          // 不再强制撑满，允许按内容自适应，在容器达到最大高度时收缩并滚动
+          flex: "0 1 auto",
           overflow: "auto",
           paddingBottom: 10,
         }}
@@ -169,14 +198,13 @@ export default function NavPanel({
               marginBottom: 8,
             }}
           >
-            <div
+            <img
+              src="/assets/location.png"
+              alt="location"
               style={{
-                width: 4,
+                width: 18,
                 height: 18,
-                borderRadius: 2,
-                background:
-                  "linear-gradient(180deg, rgba(110,231,183,0.95), rgba(110,231,183,0.35))",
-                boxShadow: "0 0 10px rgba(110,231,183,0.5)",
+                display: "block",
               }}
             />
             <div
@@ -199,6 +227,7 @@ export default function NavPanel({
                 height: "auto",
                 display: "block",
                 userSelect: "none",
+              border: "1px dashed rgba(255,255,255,0.6)",
               }}
             />
             <div style={{ position: "absolute", inset: 0 }}>
@@ -301,7 +330,7 @@ export default function NavPanel({
           {hasImages && (
               <div style={{ padding: '10px 12px' }}>
 							<div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-								<div style={{ width: 4, height: 18, borderRadius: 2, background: 'linear-gradient(180deg, rgba(147,197,253,0.95), rgba(147,197,253,0.35))', boxShadow: '0 0 10px rgba(147,197,253,0.45)' }} />
+								{/* <div style={{ width: 4, height: 18, borderRadius: 2, background: 'linear-gradient(180deg, rgba(147,197,253,0.95), rgba(147,197,253,0.35))', boxShadow: '0 0 10px rgba(147,197,253,0.45)' }} /> */}
 								<div style={{ color: '#F0F7FF', fontSize: 16, fontWeight: 700, letterSpacing: 0.5 }}>图集</div>
 							</div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
@@ -319,7 +348,7 @@ export default function NavPanel({
 											cursor: 'pointer'
 										}}
 									>
-										<img src={url} alt={`img-${idx}`} style={{ width: '100%', height: 50, objectFit: 'cover', display: 'block' }} />
+								<img src={url} alt={`img-${idx}`} style={{ width: '100%', height: 50, objectFit: 'cover', display: 'block', border: '1px solid rgba(255,255,255,0.9)', borderRadius: 10, boxSizing: 'border-box' }} />
 									</button>
 								))}
 							</div>
@@ -367,7 +396,7 @@ export default function NavPanel({
                     marginBottom: 8,
                   }}
                 >
-                  <div
+                  {/* <div
                     style={{
                       width: 4,
                       height: 18,
@@ -376,7 +405,7 @@ export default function NavPanel({
                         "linear-gradient(180deg, rgba(251,191,36,0.95), rgba(251,191,36,0.35))",
                       boxShadow: "0 0 10px rgba(251,191,36,0.4)",
                     }}
-                  />
+                  /> */}
                   <div
                     style={{
                       color: "#FFF8E6",
@@ -432,45 +461,7 @@ export default function NavPanel({
           </>
         )}
 
-        {/* 样板间标题 */}
-        <div
-          style={{
-            padding: "10px 12px",
-            color: "#fff",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          {/* <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}> */}
-          {/* <div style={{ width: 4, height: 18, borderRadius: 2, background: 'linear-gradient(180deg, rgba(248,113,113,0.95), rgba(248,113,113,0.35))', boxShadow: '0 0 10px rgba(248,113,113,0.4)' }} /> */}
-          {/* <div style={{ color: '#FFEFEF', fontSize: 16, fontWeight: 700, letterSpacing: 0.5 }}>样板间标题</div> */}
-          {/* </div> */}
-          {/* <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 6 }}>样板间</div> */}
-          <button
-            style={{
-              background: "transparent",
-              backgroundImage: "url('/assets/button.png')",
-              backgroundRepeat: "no-repeat",
-              backgroundSize: "100% 100%",
-              border: "none",
-              color: "#fff",
-              fontSize: 16,
-              marginBottom: 6,
-              padding: "8px 16px",
-              lineHeight: 1.2,
-            }}
-            onClick={() =>
-              window.open(
-                "https://riverfrontmansion.zhilingtech.com/virtual-tour/index.html",
-                "_blank"
-              )
-            }
-          >
-            前往样板间
-          </button>
-          {/* <div style={{ fontSize: 14, opacity: 0.9 }}>{sampleTitle || '未命名'}</div> */}
-        </div>
+        {/* 样板间标题（已移至顶部右侧按钮） */}
       </div>
     </div>
   );
