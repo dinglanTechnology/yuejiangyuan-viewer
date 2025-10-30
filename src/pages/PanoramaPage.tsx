@@ -316,6 +316,7 @@ export default function PanoramaPage() {
             setLightboxImages(null);
             setLightboxVideos(null);
             setLightboxTitle(undefined);
+            setLightboxStartIndex(0);
           }}
         />
       )}
