@@ -21,6 +21,7 @@ export default function PanoramaPage() {
     undefined
   );
   const [lightboxVideos, setLightboxVideos] = useState<string[] | null>(null);
+  const [lightboxStartIndex, setLightboxStartIndex] = useState<number>(0);
 
   // 读取 manifest 索引
   const { byTitlePanos, byTitleImages, byTitleVideos, titles } = useMemo(() => indexManifest(), []);
@@ -295,9 +296,10 @@ export default function PanoramaPage() {
         images={currentFolder ? loadedPngUrls[currentFolder] : undefined}
         videos={currentFolder ? loadedVideoUrls[currentFolder] : undefined}
         sampleTitle={currentFolder || undefined}
-        onOpenLightbox={(imgs, title) => {
+        onOpenLightbox={(imgs, title, startIndex) => {
           setLightboxImages(imgs);
           setLightboxTitle(title);
+          setLightboxStartIndex(startIndex ?? 0);
         }}
         onSelect={handleNavSelect}
       />
@@ -308,6 +310,7 @@ export default function PanoramaPage() {
           images={lightboxImages || undefined}
           videos={lightboxVideos || undefined}
           title={lightboxTitle}
+          initialIndex={lightboxStartIndex}
           onClose={() => {
             setLightboxImages(null);
             setLightboxVideos(null);
