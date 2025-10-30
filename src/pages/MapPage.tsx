@@ -10,9 +10,74 @@ import ImgMap from "../components/ImgMap";
 // 懒加载大型组件，进行代码分割
 const MapModel = lazy(() => import("../components/MapModel"));
 
-// 修正公共资源路径：使用 Vite public 目录下的绝对路径
-const demo2 = "/assets/demo2.jpg";
-const demo3 = "/assets/demo3.jpg";
+const hotspots = [
+  {
+    id: "hl-1",
+    title: "归家车马院",
+    leftPct: 60.89,
+    topPct: 38.67,
+  },
+  {
+    id: "hl-2",
+    title: "售楼部视野",
+    leftPct: 59,
+    topPct: 44.4,
+  },
+  {
+    id: "hl-3",
+    title: "叠水水景",
+    leftPct: 57.5,
+    topPct: 49.11,
+  },
+  {
+    id: "hl-4",
+    title: "桥特写",
+    leftPct: 56,
+    topPct: 52.34,
+  },
+  {
+    id: "hl-5",
+    title: "下沉中庭",
+    leftPct: 53.32,
+    topPct: 44.37,
+  },
+  {
+    id: "hl-6",
+    title: "立面",
+    leftPct: 55.5,
+    topPct: 61.44,
+  },
+  {
+    id: "hl-7",
+    title: "廊桥",
+    leftPct: 49.23,
+    topPct: 64.08,
+  },
+  {
+    id: "hl-8",
+    title: "儿童娱乐区",
+    leftPct: 48.04,
+    topPct: 72.21,
+  },
+  {
+    id: "hl-9",
+    title: "单元入户门",
+    leftPct: 42.68,
+    topPct: 60.11,
+  },
+  {
+    id: "hl-10",
+    title: "户型图",
+    leftPct: 52.14,
+    topPct: 28.83,
+  },
+  {
+    id: "hl-11",
+    title: "天际阳台",
+    leftPct: 49.23,
+    topPct: 24.86,
+  },
+];
 
 export default function MapPage() {
   const navigate = useNavigate();
@@ -21,8 +86,8 @@ export default function MapPage() {
     undefined
   );
 
-  // 渲染模式状态：'image' 为静态鸟瞰地图，'3d' 为3D模型
-  const [renderMode, setRenderMode] = useState<"image" | "3d">("image");
+  // 渲染模式：默认使用静态鸟瞰地图
+  const renderMode: "image" | "3d" = "image";
 
   // 索引 assets 目录下的 panoramic.jpg 以及同级 png 图片
   // 使用 lazy loading，只在需要时加载资源
@@ -73,20 +138,6 @@ export default function MapPage() {
   const [isLoadingResource, setIsLoadingResource] = useState(false);
   const [modelLoadProgress, setModelLoadProgress] = useState(0);
   const [isModelLoading, setIsModelLoading] = useState(false);
-
-  const hotspots = [
-    { id: "hl-2", title: "楼栋渲染", imageUrl: demo3, leftPct: 58, topPct: 34 },
-    { id: "hl-3", title: "户型图", imageUrl: demo2, leftPct: 72, topPct: 48 },
-    {
-      id: "hl-5",
-      title: "单元入户门",
-      imageUrl: demo2,
-      leftPct: 66,
-      topPct: 70,
-    },
-    { id: "hl-6", title: "阳台", imageUrl: demo3, leftPct: 30, topPct: 78 },
-    { id: "hl-7", title: "大门前场", imageUrl: demo3, leftPct: 55, topPct: 95 },
-  ];
 
   const handlePointClick = async (label: string) => {
     const folderName = label;
@@ -143,10 +194,6 @@ export default function MapPage() {
     navigate("/");
   };
 
-  const handleToggleRenderMode = () => {
-    setRenderMode((prev) => (prev === "image" ? "3d" : "image"));
-  };
-
   const handleModelLoadProgress = (progress: number) => {
     setModelLoadProgress(progress);
   };
@@ -189,8 +236,8 @@ export default function MapPage() {
           返回首页
         </button>
 
-        {/* 渲染模式切换按钮 */}
-        <button
+        {/* 渲染模式切换按钮 - 暂时隐藏 */}
+        {/* <button
           onClick={handleToggleRenderMode}
           style={{
             padding: "10px 20px",
@@ -211,7 +258,7 @@ export default function MapPage() {
           }}
         >
           {renderMode === "image" ? "切换到3D模型" : "切换到鸟瞰图"}
-        </button>
+        </button> */}
       </div>
 
       {/* 模型加载进度 */}
@@ -255,10 +302,12 @@ export default function MapPage() {
       {/* 根据渲染模式显示不同内容 */}
       {renderMode === "image" ? (
         // 静态鸟瞰地图模式
-        <ImgMap
-          hotspots={hotspots}
-          onHotspotClick={(hotspot) => handlePointClick(hotspot.title)}
-        />
+        <div style={{ position: "relative", width: "100%", height: "100%" }}>
+          <ImgMap
+            hotspots={hotspots}
+            onHotspotClick={(hotspot) => handlePointClick(hotspot.title)}
+          />
+        </div>
       ) : (
         // 3D 模型模式
         <Canvas camera={{ fov: 2, position: [-4, 86, -2.5] }}>
