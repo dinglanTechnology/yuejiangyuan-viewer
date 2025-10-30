@@ -34,6 +34,7 @@ export default function Hotspot({
   const groupRef = useRef<THREE.Group>(null);
   const borderMeshRef = useRef<THREE.Mesh>(null);
   const imageMeshRef = useRef<THREE.Mesh>(null);
+  const textRef = useRef<THREE.Mesh>(null);
   const [hovered, setHovered] = useState(false);
   const { camera } = useThree();
 
@@ -89,11 +90,19 @@ export default function Hotspot({
       groupRef.current.scale.set(newScale, newScale, newScale);
     }
 
-    // 让图片和边框始终面向相机（billboard效果）
+    // 让图片和边框垂直于 x/z 平面（固定方向，不跟随相机）
     if (borderMeshRef.current && imageMeshRef.current && imageUrl) {
-      // 让边框和图片都面向相机
-      borderMeshRef.current.lookAt(camera.position);
-      imageMeshRef.current.lookAt(camera.position);
+      // 设置旋转使其垂直于 x/z 平面（绕 x 轴旋转 -90 度）
+      // 这样图片的法向量将沿着 y 轴方向
+      borderMeshRef.current.rotation.set(-Math.PI / 2, 0, 0);
+      imageMeshRef.current.rotation.set(Math.PI / 2, 0, 0);
+    }
+
+    // 让文字也垂直于 x/z 平面（固定方向，不跟随相机）
+    if (textRef.current) {
+      // 设置旋转使其垂直于 x/z 平面（绕 x 轴旋转 -90 度）
+      // 这样文字的法向量将沿着 y 轴方向，与图片保持一致
+      textRef.current.rotation.set(-Math.PI / 2, 0, 0);
     }
   });
 
@@ -158,17 +167,18 @@ export default function Hotspot({
         </>
       )}
 
-      {/* 文字标识 */}
+      {/* 文字标识 - 位置动态计算，固定在图片上方（相对于相机视角） */}
       {label && (
         <Text
-          position={[0, size * 1.5, 0.01]}
+          ref={textRef}
+          position={[0, size * 1.2, 0]}
           fontSize={size * 0.3}
           color={hovered ? hoverColor : defaultColor}
           anchorX="center"
           anchorY="middle"
-          outlineWidth={size * 0.02}
+          outlineWidth={size * 0.1}
           outlineColor="#000000"
-          outlineOpacity={0.5}
+          outlineOpacity={0.8}
         >
           {label}
         </Text>
