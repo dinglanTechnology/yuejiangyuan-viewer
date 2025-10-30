@@ -27,9 +27,9 @@ function App() {
     undefined
   );
 
-  // 索引 assets 目录下的 panoramic.jpg 以及同级 png 图片
+  // 索引 assets 目录下的 panoramic.jpg 以及同级 png 图片、视频
   // 使用 lazy loading，只在需要时加载资源
-  const { folderToPano, folderToPngs } = useMemo(() => {
+  const { folderToPano, folderToPngs, folderToVideos } = useMemo(() => {
     // 改为 lazy loading，避免初始化时加载所有资源
     const panoEntries = import.meta.glob("./assets/*/panoramic.jpg", {
       query: "?url",
@@ -37,6 +37,16 @@ function App() {
       eager: false,
     }) as Record<string, () => Promise<string>>;
     const pngEntries = import.meta.glob("./assets/*/*.png", {
+      query: "?url",
+      import: "default",
+      eager: false,
+    }) as Record<string, () => Promise<string>>;
+    const mp4Entries = import.meta.glob("./assets/*/*.mp4", {
+      query: "?url",
+      import: "default",
+      eager: false,
+    }) as Record<string, () => Promise<string>>;
+    const webmEntries = import.meta.glob("./assets/*/*.webm", {
       query: "?url",
       import: "default",
       eager: false,
@@ -52,6 +62,7 @@ function App() {
     });
 
     const folderToPngsLocal: Record<string, (() => Promise<string>)[]> = {};
+    const folderToVideosLocal: Record<string, (() => Promise<string>)[]> = {};
     Object.entries(pngEntries).forEach(([path, loader]) => {
       const match = path.match(/\.\/assets\/([^/]+)\/[^/]+\.png$/);
       if (match) {
@@ -60,11 +71,28 @@ function App() {
         folderToPngsLocal[folder].push(loader);
       }
     });
+    Object.entries(mp4Entries).forEach(([path, loader]) => {
+      const match = path.match(/\.\/assets\/([^/]+)\/[^/]+\.mp4$/);
+      if (match) {
+        const folder = match[1];
+        if (!folderToVideosLocal[folder]) folderToVideosLocal[folder] = [];
+        folderToVideosLocal[folder].push(loader);
+      }
+    });
+    Object.entries(webmEntries).forEach(([path, loader]) => {
+      const match = path.match(/\.\/assets\/([^/]+)\/[^/]+\.webm$/);
+      if (match) {
+        const folder = match[1];
+        if (!folderToVideosLocal[folder]) folderToVideosLocal[folder] = [];
+        folderToVideosLocal[folder].push(loader);
+      }
+    });
 
-    // 保持 png 顺序稳定（按路径字典序）
+    // 保持资源顺序稳定（按路径字典序）
     Object.keys(folderToPngsLocal).forEach((k) => folderToPngsLocal[k].sort());
+    Object.keys(folderToVideosLocal).forEach((k) => folderToVideosLocal[k].sort());
 
-    return { folderToPano: folderToPanoLocal, folderToPngs: folderToPngsLocal };
+    return { folderToPano: folderToPanoLocal, folderToPngs: folderToPngsLocal, folderToVideos: folderToVideosLocal };
   }, []);
 
   const [currentPanoUrl, setCurrentPanoUrl] = useState<string>(panoAUrl);
@@ -73,6 +101,9 @@ function App() {
     {}
   );
   const [loadedPngUrls, setLoadedPngUrls] = useState<Record<string, string[]>>(
+    {}
+  );
+  const [loadedVideoUrls, setLoadedVideoUrls] = useState<Record<string, string[]>>(
     {}
   );
   const [isLoadingResource, setIsLoadingResource] = useState(false);
@@ -98,29 +129,13 @@ function App() {
     { id: "hl-7", title: "大门前场", imageUrl: demo3, leftPct: 55, topPct: 95 },
   ];
 
-  // 全景内图片热点（方位以弧度计，yaw=0 指向画面正前方，pitch=0 水平）
-  // 从当前文件夹的 PNG 图片中随机选择一张作为热点图片
-  const panoImageHotspots = useMemo(() => {
-    if (!currentFolder || !loadedPngUrls[currentFolder]?.length) {
-      return [];
-    }
-    const images = loadedPngUrls[currentFolder];
-    const randomImage = images[Math.floor(Math.random() * images.length)];
-    return [
-      {
-        id: "pano-photo-1",
-        title: "查看图片",
-        imageUrl: randomImage,
-        yaw: 0,
-        pitch: 0,
-      },
-    ];
-  }, [currentFolder, loadedPngUrls]);
+  // 取消全景内的圆形图片热点
 
   const handlePointClick = async (label: string) => {
     const folderName = label;
     const panoLoader = folderToPano[folderName];
     const pngLoaders = folderToPngs[folderName];
+    const videoLoaders = folderToVideos[folderName];
 
     if (panoLoader) {
       // 如果有全景图，先加载资源
@@ -139,6 +154,15 @@ function App() {
             (await Promise.all(pngLoaders.map((loader) => loader())));
           if (!loadedPngUrls[folderName]) {
             setLoadedPngUrls((prev) => ({ ...prev, [folderName]: pngUrls }));
+          }
+        }
+        // 加载视频（如果有）
+        if (videoLoaders?.length) {
+          const vids =
+            loadedVideoUrls[folderName] ||
+            (await Promise.all(videoLoaders.map((loader) => loader())));
+          if (!loadedVideoUrls[folderName]) {
+            setLoadedVideoUrls((prev) => ({ ...prev, [folderName]: vids }));
           }
         }
 
@@ -198,6 +222,7 @@ function App() {
       availableFolders[Math.floor(Math.random() * availableFolders.length)];
     const panoLoader = folderToPano[randomFolder];
     const pngLoaders = folderToPngs[randomFolder];
+    const videoLoaders = folderToVideos[randomFolder];
 
     setIsTransitioning(true);
     setIsLoadingResource(true);
@@ -212,6 +237,11 @@ function App() {
       if (pngLoaders?.length) {
         const pngUrls = await Promise.all(pngLoaders.map((loader) => loader()));
         setLoadedPngUrls((prev) => ({ ...prev, [randomFolder]: pngUrls }));
+      }
+      // 加载视频（如果有）
+      if (videoLoaders?.length) {
+        const vids = await Promise.all(videoLoaders.map((loader) => loader()));
+        setLoadedVideoUrls((prev) => ({ ...prev, [randomFolder]: vids }));
       }
 
       setCurrentPanoUrl(url);
@@ -333,25 +363,27 @@ function App() {
             <Suspense fallback={null}>
               <PanoramaScene
                 imageUrl={currentPanoUrl}
-                imageHotspots={panoImageHotspots}
-                onHotspotClick={() => {
-                  if (currentFolder && loadedPngUrls[currentFolder]?.length) {
-                    setLightboxImages(loadedPngUrls[currentFolder]);
-                    setLightboxTitle(currentFolder);
-                  }
-                }}
+                imageHotspots={[]}
               />
             </Suspense>
             <OrbitControls enableZoom={false} />
           </Canvas>
           <NavPanel
             hotspots={hotspots}
+            images={currentFolder ? loadedPngUrls[currentFolder] : undefined}
+            videos={currentFolder ? loadedVideoUrls[currentFolder] : undefined}
+            sampleTitle={currentFolder || undefined}
+            onOpenLightbox={(imgs, title) => {
+              setLightboxImages(imgs);
+              setLightboxTitle(title);
+            }}
             onSelect={async (id) => {
               const hs = hotspots.find((h) => h.id === id);
               if (!hs) return;
               const folderName = hs.title;
               const panoLoader = folderToPano[folderName];
               const pngLoaders = folderToPngs[folderName];
+              const videoLoaders = folderToVideos[folderName];
               if (panoLoader) {
                 try {
                   const url =
@@ -372,6 +404,18 @@ function App() {
                       setLoadedPngUrls((prev) => ({
                         ...prev,
                         [folderName]: pngUrls,
+                      }));
+                    }
+                  }
+                  // 加载视频（如果有）
+                  if (videoLoaders?.length) {
+                    const vids =
+                      loadedVideoUrls[folderName] ||
+                      (await Promise.all(videoLoaders.map((loader) => loader())));
+                    if (!loadedVideoUrls[folderName]) {
+                      setLoadedVideoUrls((prev) => ({
+                        ...prev,
+                        [folderName]: vids,
                       }));
                     }
                   }
